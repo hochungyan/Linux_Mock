@@ -1,0 +1,597 @@
+
+=== shell fundamentals ===
+   PASS  echo
+   PASS  pipe into grep -c
+   PASS  $HOME expansion
+   PASS  cd + pwd
+   PASS  glob expands
+   PASS  redirect to file then cat
+   PASS  && short circuit
+   PASS  || runs on failure
+   PASS  command not found -> 127
+   PASS  pipe strips colour
+   PASS  printf hex (TID->nid)
+   PASS  wc -l over pipe
+   PASS  tail -n
+   PASS  tail -N shorthand
+   PASS  find -name
+   PASS  grep -i case insensitive
+
+=== S1 disk full / deleted fd ===
+   PASS  df shows /var at 100%
+   PASS  df -i shows healthy inodes
+   PASS  du /var reports far less than df
+   PASS  lsof +L1 finds deleted file
+   PASS  deleted file shows the big size
+   PASS  app log shows ENOSPC
+   PASS  findings before fix
+   PASS  not yet fixed
+   PASS  truncate via /proc/pid/fd reclaims space
+   PASS  graded as clean
+   PASS  df now healthy
+   PASS  restart also frees space
+   PASS  restart graded blunt
+   PASS  kill -9 frees space
+   PASS  kill graded worst
+   PASS  truncate -s 0 form works
+
+=== S2 market data frozen ===
+   PASS  tail shows last publish 08:47
+   PASS  process alive in ps
+   PASS  ss -uanp shows large Recv-Q
+   PASS  netstat -su shows receive buffer errors
+   PASS  ip -s link shows feed NIC counters
+   PASS  jstack dumps threads
+   PASS  dispatch threads BLOCKED on InstrumentCache
+   PASS  lock holder in socketRead0
+   PASS  dumpTaken flag set
+   PASS  ping refdata-db-ldn fails
+   PASS  conf shows timeout=0
+   PASS  findings gathered
+   PASS  not fixed yet
+   PASS  failover endpoint responds
+   PASS  fixed after failover
+   PASS  graded clean
+   PASS  threads unblocked after fix
+   PASS  restart also clears it
+   PASS  restart graded blunt
+
+=== S3 JVM memory leak ===
+   PASS  gc log shows futile Full GCs
+   PASS  jstat shows old gen ~99
+   PASS  jmap -heap shows near-full heap
+   PASS  histogram names the leak class
+   PASS  dmesg shows the oom kill
+   PASS  free shows swapping
+   PASS  top -H exposes GC threads
+   PASS  conf shows unbounded cache
+   PASS  findings gathered
+   PASS  heap dump succeeds
+   PASS  heapDumped flag set
+   PASS  restart fixes
+   PASS  dump-then-restart graded clean
+   PASS  restart without dump graded blunt
+   PASS  forced GC does not save a leak
+
+=== S4 CPU spin thread ===
+   PASS  top shows java ~100%
+   PASS  top -H isolates hot thread 4913
+   PASS  hex conversion
+   PASS  jstack nid match finds spinner
+   PASS  config shows unsynchronised map
+   PASS  gc is innocent
+   PASS  findings gathered
+   PASS  drain works
+   PASS  fixed
+   PASS  drain+restart graded clean
+   PASS  cold restart graded blunt
+
+=== S5 FIX sequence gap ===
+   PASS  app log shows the reject reason
+   PASS  FIX message log has 35=5 logout
+   PASS  client reconnect churn visible
+   PASS  store file has 88413
+   PASS  cfg shows ResetOnLogon=N
+   PASS  other sessions healthy
+   PASS  findings gathered
+   PASS  reset fixes session
+   PASS  graded clean
+   PASS  store file updated
+   PASS  restart alone does NOT fix it
+
+=== S6 NFS hang / EOD batch ===
+   PASS  autorep shows RU job
+   PASS  ps shows sqlldr
+   PASS  D state and wchan visible
+   PASS  dmesg shows nfs stall
+   PASS  nas-ldn-01 unreachable
+   PASS  nas-ldn-02 reachable
+   PASS  fstab shows hard mount
+   PASS  kill -9 refused on D state
+   PASS  process survives kill -9
+   PASS  replica readable
+   PASS  hungPaths set
+   PASS  findings gathered
+   PASS  DR start blocked while original runs
+   PASS  approved DBA fence prevents late writes
+   PASS  DR job starts
+   PASS  DR job completes and releases batch
+   PASS  graded clean
+   PASS  downstream released
+   PASS  false success "works"
+   PASS  but is penalised hard
+
+=== cross-scenario sanity ===
+   PASS  cpu-spin-thread: exactly one correct root cause
+   PASS  cpu-spin-thread: has hints
+   PASS  cpu-spin-thread: has debrief
+   PASS  cpu-spin-thread: starts unfixed
+   PASS  cpu-spin-thread: core diagnostics all run
+   PASS  disk-full-deleted-fd: exactly one correct root cause
+   PASS  disk-full-deleted-fd: has hints
+   PASS  disk-full-deleted-fd: has debrief
+   PASS  disk-full-deleted-fd: starts unfixed
+   PASS  disk-full-deleted-fd: core diagnostics all run
+   PASS  fix-seqnum-gap: exactly one correct root cause
+   PASS  fix-seqnum-gap: has hints
+   PASS  fix-seqnum-gap: has debrief
+   PASS  fix-seqnum-gap: starts unfixed
+   PASS  fix-seqnum-gap: core diagnostics all run
+   PASS  jvm-memory-leak: exactly one correct root cause
+   PASS  jvm-memory-leak: has hints
+   PASS  jvm-memory-leak: has debrief
+   PASS  jvm-memory-leak: starts unfixed
+   PASS  jvm-memory-leak: core diagnostics all run
+   PASS  market-data-frozen: exactly one correct root cause
+   PASS  market-data-frozen: has hints
+   PASS  market-data-frozen: has debrief
+   PASS  market-data-frozen: starts unfixed
+   PASS  market-data-frozen: core diagnostics all run
+   PASS  nfs-hang-eod: exactly one correct root cause
+   PASS  nfs-hang-eod: has hints
+   PASS  nfs-hang-eod: has debrief
+   PASS  nfs-hang-eod: starts unfixed
+   PASS  nfs-hang-eod: core diagnostics all run
+
+all engine checks passed
+
+=== drill packs loaded ===
+   PASS  drills present
+
+=== cpu-load-basics  (12 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Core count — answer "8" appears in output of: nproc
+   PASS  2. 1-minute load — answer "8.12" appears in output of: uptime
+   PASS  3. Rising or falling — answer "rising" appears in output of: uptime ; grep -A2 "HIGHER" /home/gsupport/cpu-notes.txt
+   PASS  4. CPU or storage — answer "storage" appears in output of: mpstat ; iostat -x ; tail /var/log/calc/calc.log ; grep -A5 "READING THE CPU BREAKDOWN" /home/gsupport/cpu-notes.txt
+   PASS  5. %iowait — answer "22.00" appears in output of: mpstat
+   PASS  6. State that inflates load — answer "d" appears in output of: grep -B2 -A2 "uninterruptible" /home/gsupport/cpu-notes.txt
+   PASS  7. Count blocked processes — answer "3" appears in output of: ps -eo state,pid,comm | grep -c "^D"
+   PASS  8. Run queue depth — answer "2" appears in output of: vmstat 1 3
+   PASS  9. Busiest process — answer "480.0" appears in output of: ps -eo pid,pcpu,comm | sort -k2 -rn | head -3
+   PASS  10. Pinned core — answer "3" appears in output of: mpstat -P ALL
+   PASS  11. Hottest thread — answer "6421" appears in output of: top -H -b -p 6402
+   PASS  12. Nice value of the batch — answer "10" appears in output of: ps -eo pid,ni,comm | grep batch
+
+=== disk-filesystem-basics  (10 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Fullest filesystem — answer "/var" appears in output of: df -h
+   PASS  2. Space left on /var — answer "16g" appears in output of: df -h /var
+   PASS  3. Out of inodes — answer "/data" appears in output of: df -i
+   PASS  4. Filesystem type of /data — answer "ext4" appears in output of: df -T
+   PASS  5. Biggest directory in /var — answer "/var/log" appears in output of: du -s /var/* | sort -rn | head -3
+   PASS  6. Files over 1GB — answer "3" appears in output of: find /var/log -type f -size +1G | wc -l
+   PASS  7. Read-only mount — answer "/mnt/ref" appears in output of: mount | grep "(ro"
+   PASS  8. Permissions in octal — answer "640" appears in output of: stat /var/log/pricer/pricer.log
+   PASS  9. Which fs holds a path — answer "/apps" appears in output of: df -h /apps/pricer/lib/pricer.jar
+   PASS  10. df full but du cannot find it — answer "lsof +l1" appears in output of: grep -A4 "Deleted but still open" /home/gsupport/disk-notes.txt
+
+=== file-discovery  (14 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Modified in the last 30 days — answer "4" appears in output of: find /archive -type f -mtime -30 | wc -l
+   PASS  2. Older than 30 completed days — answer "3" appears in output of: find /archive -type f -mtime +30 | wc -l
+   PASS  3. Less than one day old — answer "/archive/today.log" appears in output of: find /archive -type f -mtime 0
+   PASS  4. Modified in 30 minutes — answer "/archive/today.log" appears in output of: find /archive -type f -mmin -30
+   PASS  5. Quote a name pattern — answer "4" appears in output of: find /archive -type f -name "*.log" | wc -l
+   PASS  6. Case-insensitive names — answer "2" appears in output of: find /archive -type f -iname "*.csv" | wc -l
+   PASS  7. Limit traversal depth — answer "6" appears in output of: find /archive -maxdepth 1 -type f | wc -l
+   PASS  8. Find by owner — answer "2" appears in output of: find /archive -type f -user batchsvc | wc -l
+   PASS  9. Find large logs — answer "2" appears in output of: find /archive -type f -name "*.log" -size +1G | wc -l
+   PASS  10. Locate symlinks — answer "/archive/current" appears in output of: find /archive -type l
+   PASS  11. Show hidden files — answer ".rotation-state" appears in output of: ls -a /archive
+   PASS  12. Inspect file metadata — answer "appsvc" appears in output of: stat /archive/week.log
+   PASS  13. Content time versus ctime — answer "ctime" appears in output of: cat /notes/timestamps.txt
+   PASS  14. Check inode capacity — answer "99%" appears in output of: df -i /archive
+
+=== fix-support  (18 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Read the counterparty — answer "VENUE" appears in output of: grep -F "|35=A|" /fix/messages.log
+   PASS  2. Read heartbeat interval — answer "30" appears in output of: grep -F "|35=A|" /fix/messages.log | grep -o "108=[0-9]*"
+   PASS  3. Count new order requests — answer "2" appears in output of: grep -Fc "|35=D|" /fix/messages.log
+   PASS  4. Count execution reports — answer "5" appears in output of: grep -Fc "|35=8|" /fix/messages.log
+   PASS  5. Count raw trade records — answer "3" appears in output of: grep -F "|35=8|" /fix/messages.log | grep -Fc "|150=F|"
+   PASS  6. Count distinct fill IDs — answer "2" appears in output of: grep -F "|150=F|" /fix/messages.log | grep -o "|17=[^|]*" | sort -u | wc -l
+   PASS  7. Identify the replayed fill — answer "E100B" appears in output of: grep -F "|150=F|" /fix/messages.log | grep -F "|43=Y|" | grep -o "|17=[^|]*"
+   PASS  8. Original versus sending time — answer "122" appears in output of: grep -F "|150=F|" /fix/messages.log | grep -F "|43=Y|"
+   PASS  9. Read the partial cumulative qty — answer "40" appears in output of: grep -F "|39=1|" /fix/messages.log | grep -o "|14=[0-9]*"
+   PASS  10. Read the partial leaves — answer "60" appears in output of: grep -F "|39=1|" /fix/messages.log | grep -o "|151=[0-9]*"
+   PASS  11. Read the latest fill quantity — answer "60" appears in output of: grep -F "|17=E100B|" /fix/messages.log | head -1 | grep -o "|32=[0-9]*"
+   PASS  12. Read the reject reason — answer "UnknownSymbol" appears in output of: grep -F "|11=O101|" /fix/messages.log | grep -F "|39=8|" | grep -o "|58=[^|]*"
+   PASS  13. Find the expected sequence — answer "105" appears in output of: grep "sequence too high" /fix/session.log
+   PASS  14. Read the resend beginning — answer "105" appears in output of: grep -F "|35=2|" /fix/messages.log | grep -o "|7=[0-9]*"
+   PASS  15. Read the gap-fill target — answer "107" appears in output of: grep -F "|35=4|" /fix/messages.log | grep -o "|36=[0-9]*"
+   PASS  16. Match a TestRequest response — answer "PROBE1" appears in output of: grep -F "|35=0|" /fix/messages.log | grep -o "|112=[^|]*"
+   PASS  17. Read the logout explanation — answer "Scheduled_logout" appears in output of: grep -F "|35=5|" /fix/messages.log | grep -o "|58=[^|]*"
+   PASS  18. Resolve an unknown order state — answer "reconcile" appears in output of: grep unknown-order-state /fix/runbook.txt
+
+=== logs-basics  (15 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Count ERROR lines — answer "8" appears in output of: grep -c ERROR /var/log/tradeweb/app.log
+   PASS  2. Distinct exception classes — answer "3" appears in output of: grep -o "[A-Za-z]*Exception" /var/log/tradeweb/app.log | sort -u | wc -l
+   PASS  3. Time of first ERROR — answer "09:59:41" appears in output of: grep ERROR /var/log/tradeweb/app.log | head -1 | awk '{print $2}'
+   PASS  4. Thread of last ERROR — answer "[http-nio-8080-exec-4]" appears in output of: grep ERROR /var/log/tradeweb/app.log | tail -1 | awk '{print $4}'
+   PASS  5. Busiest thread — answer "[db-pool-2]" appears in output of: awk '{print $4}' /var/log/tradeweb/app.log | sort | uniq -c | sort -rn | head -3
+   PASS  6. Files changed in 30 min — answer "2" appears in output of: find /var/log/tradeweb -type f -mmin -30 | wc -l
+   PASS  7. Lines without INFO — answer "12" appears in output of: sed '/INFO/d' /var/log/tradeweb/app.log | wc -l
+   PASS  8. ERRORs in the rotated .gz — answer "5" appears in output of: zgrep -c ERROR /var/log/tradeweb/app.log.2.gz
+   PASS  9. Busiest client IP — answer "10.14.30.71" appears in output of: awk '{print $1}' /var/log/tradeweb/access.log | sort | uniq -c | sort -rn | head -1
+   PASS  10. Count HTTP 500s — answer "3" appears in output of: awk '{print $9}' /var/log/tradeweb/access.log | grep -c 500
+   PASS  11. Lines in one minute — answer "2" appears in output of: grep -c "10:02" /var/log/tradeweb/app.log
+   PASS  12. Line after an exception — answer "retrying in 5s" appears in output of: grep -A1 SQLRecoverableException /var/log/tradeweb/app.log | head -2
+   PASS  13. Lines from one class — answer "9" appears in output of: grep -c OrderService /var/log/tradeweb/app.log
+   PASS  14. Which files contain a pattern — answer "3" appears in output of: grep -l NullPointerException /var/log/tradeweb/* | wc -l
+   PASS  15. Files over 1GB — answer "2" appears in output of: find /var/log/tradeweb -type f -size +1G | wc -l
+
+=== memory-basics  (12 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Total RAM — answer "64" appears in output of: free -g
+   PASS  2. Free vs available — answer "available" appears in output of: free -m ; cat /home/gsupport/memory-notes.txt
+   PASS  3. Biggest process by RSS — answer "9012" appears in output of: ps -eo pid,rss,comm | sort -k2 -rn | head -3
+   PASS  4. RSS vs VSZ — answer "rss" appears in output of: ps -eo pid,rss,vsz,comm | head -5
+   PASS  5. Is it swapping — answer "1536" appears in output of: free -m
+   PASS  6. JVM max heap — answer "12g" appears in output of: ps -ef | grep java | grep -o "\-Xmx[0-9a-zA-Z]*"
+   PASS  7. Percentage of RAM used — answer "21.1" appears in output of: ps aux | sort -k6 -rn | head -3
+   PASS  8. OOM killer victim — answer "batchloader" appears in output of: dmesg -T | grep -i "killed process"
+   PASS  9. Total RAM in kB — answer "67108864" appears in output of: grep MemTotal /proc/meminfo
+   PASS  10. The available field — answer "memavailable" appears in output of: grep -i avail /proc/meminfo
+   PASS  11. Page cache size — answer "25088" appears in output of: free -m
+   PASS  12. Real swapping columns — answer "si so" appears in output of: vmstat 1 3
+
+=== networking-ip-basics  (12 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. IP of eth0 — answer "10.14.22.75" appears in output of: ip addr show eth0
+   PASS  2. Prefix length of eth1 — answer "/26" appears in output of: ip addr show eth1
+   PASS  3. Usable hosts in a /26 — answer "62" appears in output of: grep "/26" /home/gsupport/ip-notes.txt
+   PASS  4. Default gateway — answer "10.14.22.1" appears in output of: ip route
+   PASS  5. Route for 10.90.8.200 — answer "eth0" appears in output of: ip route ; grep -A3 "MOST SPECIFIC" /home/gsupport/ip-notes.txt
+   PASS  6. MTU of eth1 — answer "9000" appears in output of: ip link show eth1
+   PASS  7. MAC of eth1 — answer "00:50:56:9a:41:76" appears in output of: ip link show eth1
+   PASS  8. DNS servers — answer "10.14.0.53" appears in output of: cat /etc/resolv.conf
+   PASS  9. hosts file vs DNS — answer "/etc/hosts" appears in output of: grep hosts /etc/nsswitch.conf
+   PASS  10. Gateway MAC from ARP — answer "00:00:5e:00:01:01" appears in output of: arp -n
+   PASS  11. Link speed of eth1 — answer "10000mb/s" appears in output of: ethtool eth1
+   PASS  12. Diagnose the mq failure — answer "refused" appears in output of: ping -c 2 mq-broker ; nc -zv mq-broker 5672
+
+=== permissions-support  (14 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Identify the file owner — answer "appsvc" appears in output of: ls -l /app/gateway.conf
+   PASS  2. Identify the file group — answer "support" appears in output of: ls -l /app/gateway.conf
+   PASS  3. Read a numeric mode — answer "640" appears in output of: stat /app/gateway.conf
+   PASS  4. Read an executable mode — answer "750" appears in output of: stat /app/run.sh
+   PASS  5. Read a private-file mode — answer "600" appears in output of: stat /app/private.key
+   PASS  6. Identify the current account — answer "gsupport" appears in output of: whoami
+   PASS  7. List versus traverse — answer "execute" appears in output of: grep directory-execute /evidence/access-notes.txt
+   PASS  8. Deleting a read-only file — answer "parent" appears in output of: grep delete-requirement /evidence/access-notes.txt
+   PASS  9. Recognize setgid inheritance — answer "group inheritance" appears in output of: grep setgid-directory /evidence/access-notes.txt
+   PASS  10. Recognize the sticky bit — answer "removal" appears in output of: grep sticky-directory /evidence/access-notes.txt
+   PASS  11. Calculate file umask result — answer "640" appears in output of: grep umask-027-file /evidence/access-notes.txt
+   PASS  12. Calculate directory umask — answer "750" appears in output of: grep umask-027-directory /evidence/access-notes.txt
+   PASS  13. Inspect access beyond modes — answer "getfacl" appears in output of: grep acl-inspection /evidence/access-notes.txt
+   PASS  14. Count authentication failures — answer "2" appears in output of: grep -ic "Failed password" /evidence/auth.log
+
+=== processes-signals-basics  (10 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Parent of the extract — answer "21400" appears in output of: ps -ef | grep extract_positions
+   PASS  2. Count zombies — answer "2" appears in output of: ps -ef | grep -c defunct
+   PASS  3. Clearing a zombie — answer "parent" appears in output of: grep -A5 "ZOMBIES" /home/gsupport/proc-notes.txt
+   PASS  4. Default kill signal — answer "15" appears in output of: kill -l
+   PASS  5. Uncatchable signal — answer "9" appears in output of: grep -B1 -A2 "cannot be caught" /home/gsupport/proc-notes.txt
+   PASS  6. Signal nohup ignores — answer "sighup" appears in output of: kill -l | head -2 ; grep -i "nohup" /home/gsupport/proc-notes.txt
+   PASS  7. Stuck process state — answer "d" appears in output of: ps -eo state,pid,wchan,cmd | grep tar
+   PASS  8. kill -9 on D state — answer "no" appears in output of: kill -9 22800
+   PASS  9. Open file limit — answer "1024" appears in output of: ulimit -n
+   PASS  10. Diagnose "Too many open files" — answer "42" appears in output of: lsof -p 9310 | grep -vc COMMAND
+
+=== service-batch-time  (16 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Check gateway runtime state — answer "active" appears in output of: systemctl is-active gateway
+   PASS  2. Find the failed service — answer "pricing" appears in output of: systemctl list-units
+   PASS  3. Read the startup failure — answer "Permission denied" appears in output of: journalctl -u pricing -n 10
+   PASS  4. Identify the gateway PID — answer "2200" appears in output of: ss -nptl | grep 9310
+   PASS  5. Read the configured resolver — answer "10.20.0.53" appears in output of: grep nameserver /etc/resolv.conf
+   PASS  6. Resolve the database name — answer "10.20.10.20" appears in output of: nslookup pricing-db
+   PASS  7. Classify a missing DNS name — answer "NXDOMAIN" appears in output of: nslookup unknown-pricing
+   PASS  8. Check a database TCP port — answer "5432" appears in output of: nc -zv pricing-db 5432
+   PASS  9. Read the selected time peer — answer "10.20.0.10" appears in output of: ntpq -pn
+   PASS  10. Interpret NTP offset units — answer "milliseconds" appears in output of: grep ntpq-offset-unit /batch/runbook.txt
+   PASS  11. Interpret NTP reach notation — answer "octal" appears in output of: grep ntpq-reach-base /batch/runbook.txt
+   PASS  12. Read the failed batch exit — answer "12" appears in output of: autorep -J LOAD_PRICES -q
+   PASS  13. Find the blocked dependency — answer "LOAD_PRICES" appears in output of: autorep -J VALUATION -q
+   PASS  14. Check a control-total break — answer "1198" appears in output of: grep control_total /batch/prices.log
+   PASS  15. Read the schedule time zone — answer "UTC" appears in output of: cat /etc/batch.cron
+   PASS  16. Define recovery completion — answer "business reconciliation" appears in output of: grep recovery-success /batch/runbook.txt
+
+=== shell-evidence  (14 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Save filtered errors — answer "2" appears in output of: grep ERROR /evidence/orders.log > /tmp/errors.txt; wc -l /tmp/errors.txt
+   PASS  2. Append a second observation — answer "2" appears in output of: echo START > /tmp/append.txt; echo END >> /tmp/append.txt; wc -l /tmp/append.txt
+   PASS  3. Capture error output — answer "No such file or directory" appears in output of: cat /evidence/missing.txt 2> /tmp/stderr.txt; cat /tmp/stderr.txt
+   PASS  4. Capture both streams — answer "INC2048" appears in output of: cat /evidence/note.txt /evidence/missing.txt > /tmp/combined.txt 2>&1; cat /tmp/combined.txt
+   PASS  5. Display and save — answer "A103" appears in output of: grep ERROR /evidence/orders.log | tee /tmp/tee-errors.txt
+   PASS  6. Append through tee — answer "2" appears in output of: echo FIRST > /tmp/tee-append.txt; echo SECOND | tee -a /tmp/tee-append.txt; wc -l /tmp/tee-append.txt
+   PASS  7. Truncate disposable content — answer "0" appears in output of: echo disposable > /tmp/disposable.txt; truncate -s 0 /tmp/disposable.txt; wc -c /tmp/disposable.txt
+   PASS  8. Bare redirect — answer "0" appears in output of: echo temporary > /tmp/scratch.txt; > /tmp/scratch.txt; wc -l /tmp/scratch.txt
+   PASS  9. Input redirection — answer "4" appears in output of: wc -l < /evidence/orders.log
+   PASS  10. Copy an evidence note — answer "INC2048" appears in output of: cp /evidence/note.txt /tmp/note-copy.txt; cat /tmp/note-copy.txt
+   PASS  11. Move a scratch file — answer "moved" appears in output of: echo moved > /tmp/before.txt; mv /tmp/before.txt /tmp/after.txt; cat /tmp/after.txt
+   PASS  12. Quote a filename with spaces — answer "captured" appears in output of: echo captured > "/tmp/bridge notes.txt"; cat "/tmp/bridge notes.txt"
+   PASS  13. Success-only follow-up — answer "FOUND" appears in output of: grep -q ERROR /evidence/orders.log && echo FOUND
+   PASS  14. Failure-only follow-up — answer "NO_MATCH" appears in output of: grep -q FATAL /evidence/orders.log || echo NO_MATCH
+
+=== tcp-basics  (13 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. PID listening on 9310 — answer "4820" appears in output of: ss -tlnp | grep 9310
+   PASS  2. Ports the gateway listens on — answer "2" appears in output of: ss -tlnp | grep -c 4820
+   PASS  3. ESTABLISHED count — answer "11" appears in output of: ss -tn | grep -c ESTAB
+   PASS  4. CLOSE_WAIT count — answer "5" appears in output of: netstat -an | grep -c CLOSE_WAIT
+   PASS  5. Who sent FIN first — answer "remote" appears in output of: cat /home/gsupport/tcp-states.txt
+   PASS  6. Busiest client IP — answer "10.14.30.71" appears in output of: netstat -an | grep 9310 | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -rn | head -3
+   PASS  7. TCP retransmits — answer "1842" appears in output of: netstat -s | grep -i retrans
+   PASS  8. Which DB port is open — answer "1521" appears in output of: nc -zv refdata-db 1521
+   PASS  9. TIME_WAIT count — answer "3" appears in output of: netstat -an | grep -c TIME_WAIT
+   PASS  10. Who closed in TIME_WAIT — answer "local" appears in output of: grep -A2 TIME_WAIT /home/gsupport/tcp-states.txt
+   PASS  11. Listening socket count — answer "3" appears in output of: ss -tln | grep -c LISTEN
+   PASS  12. Refused, exactly — answer "connection refused" appears in output of: nc -zv refdata-db 1522
+   PASS  13. Admin port from config — answer "9975" appears in output of: grep admin /apps/fixgw/conf/fixgw.properties
+
+=== text-investigation  (14 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Ignore case — answer "3" appears in output of: grep -ic error /logs/orders.log
+   PASS  2. Invert a pattern — answer "4" appears in output of: grep -vc INFO /logs/orders.log
+   PASS  3. Extended alternation — answer "4" appears in output of: grep -icE "WARN|ERROR" /logs/orders.log
+   PASS  4. Print matching line numbers — answer "4" appears in output of: grep -n "order=O103 " /logs/orders.log
+   PASS  5. Literal IP matching — answer "1" appears in output of: grep -Fc 10.20.1.5 /logs/literal.log
+   PASS  6. Anchor the timestamp — answer "order=O102" appears in output of: grep "^09:30:02 " /logs/orders.log | awk '{print $3}'
+   PASS  7. Extract the fourth field — answer "client=BETA" appears in output of: grep "status=REJECTED" /logs/orders.log | head -1 | awk '{print $4}'
+   PASS  8. Parse a CSV field — answer "980" appears in output of: awk -F, '/O103/{print $3}' /logs/latency.csv
+   PASS  9. Count fields — answer "3" appears in output of: awk -F, '/O101/{print NF}' /logs/latency.csv
+   PASS  10. Select a line range — answer "O102" appears in output of: sed -n '3p' /logs/orders.log
+   PASS  11. Preview a substitution — answer "status=REVIEW" appears in output of: grep O101 /logs/orders.log | sed 's/REJECTED/REVIEW/'
+   PASS  12. Remove comment lines — answer "2" appears in output of: sed '/^#/d' /logs/service.conf | wc -l
+   PASS  13. Deduplicate order IDs — answer "6" appears in output of: grep -o "order=O[0-9]*" /logs/orders.log | sort -u | wc -l
+   PASS  14. Find matching filenames — answer "2" appears in output of: grep -il error /logs/*.log | wc -l
+
+=== udp-multicast-basics  (12 tasks) ===
+   PASS  has brief
+   PASS  has wrapUp
+   PASS  world builds
+   PASS  1. Multicast groups on eth1 — answer "4" appears in output of: netstat -g | grep -c eth1
+   PASS  2. Group for port 14310 — answer "233.71.14.20" appears in output of: ss -uanp | grep 14310
+   PASS  3. UDP socket state — answer "unconn" appears in output of: ss -uan | head -4
+   PASS  4. Recv-Q on the primary feed — answer "4352" appears in output of: ss -uanp | grep 14310
+   PASS  5. UDP receive errors — answer "2104" appears in output of: netstat -su | grep -i "receive errors"
+   PASS  6. Which NIC carries the feed — answer "eth1" appears in output of: netstat -i
+   PASS  7. NIC-level drops — answer "0" appears in output of: netstat -i
+   PASS  8. Prove packets are arriving — answer "8" appears in output of: tcpdump -i eth1 -n -c 8 host 233.71.14.20
+   PASS  9. Configured receive buffer — answer "8388608" appears in output of: grep rcvbuf /apps/mdrecv/conf/feeds.conf
+   PASS  10. Does UDP retransmit — answer "no" appears in output of: grep -A3 "does not retransmit" /home/gsupport/udp-notes.txt
+   PASS  11. UDP sockets held — answer "3" appears in output of: ss -uanp | grep -c 7204
+   PASS  12. Backup line port — answer "14311" appears in output of: grep feed.b /apps/mdrecv/conf/feeds.conf
+
+=== drill answer checking ===
+   PASS  exact match accepted
+   PASS  comma-insensitive
+   PASS  case-insensitive
+   PASS  quotes stripped
+
+=== every task has a distinct short label ===
+   PASS  cpu-load-basics: labels unique
+   PASS  cpu-load-basics: labels short enough for the panel
+   PASS  disk-filesystem-basics: labels unique
+   PASS  disk-filesystem-basics: labels short enough for the panel
+   PASS  file-discovery: labels unique
+   PASS  file-discovery: labels short enough for the panel
+   PASS  fix-support: labels unique
+   PASS  fix-support: labels short enough for the panel
+   PASS  logs-basics: labels unique
+   PASS  logs-basics: labels short enough for the panel
+   PASS  memory-basics: labels unique
+   PASS  memory-basics: labels short enough for the panel
+   PASS  networking-ip-basics: labels unique
+   PASS  networking-ip-basics: labels short enough for the panel
+   PASS  permissions-support: labels unique
+   PASS  permissions-support: labels short enough for the panel
+   PASS  processes-signals-basics: labels unique
+   PASS  processes-signals-basics: labels short enough for the panel
+   PASS  service-batch-time: labels unique
+   PASS  service-batch-time: labels short enough for the panel
+   PASS  shell-evidence: labels unique
+   PASS  shell-evidence: labels short enough for the panel
+   PASS  tcp-basics: labels unique
+   PASS  tcp-basics: labels short enough for the panel
+   PASS  text-investigation: labels unique
+   PASS  text-investigation: labels short enough for the panel
+   PASS  udp-multicast-basics: labels unique
+   PASS  udp-multicast-basics: labels short enough for the panel
+
+all drill checks passed
+PASS quoting expands double quotes but preserves single quotes and escaped dollars
+PASS redirection preserves bytes, creates empty files, and truncates before reading
+PASS stdout/stderr duplication respects left-to-right descriptor order
+PASS tee append, echo -n and wc newline counting match stream bytes
+PASS grep case, line numbers, inversion, limits, regex dialects and status codes
+PASS find day buckets, minute buckets, case-insensitive names and size units
+PASS truncate preserves prefixes, pads zero bytes, creates files and respects -c
+PASS awk extracts regex-separated fields, filters records and sums numeric columns
+PASS sed honors default print, -n, substitution p, in-place edits and backreferences
+PASS directory copies and moves preserve content and failed moves preserve the source
+
+10 shell accuracy groups passed.
+system accuracy regressions passed
+
+=== index.html script tags ===
+   PASS  exists: js/vfs.js
+   PASS  exists: js/world.js
+   PASS  exists: js/shell.js
+   PASS  exists: js/commands/core.js
+   PASS  exists: js/commands/sys.js
+   PASS  exists: js/commands/net.js
+   PASS  exists: js/commands/java.js
+   PASS  exists: js/commands/ops.js
+   PASS  exists: js/scenarios/disk-full-deleted-fd.js
+   PASS  exists: js/scenarios/market-data-frozen.js
+   PASS  exists: js/scenarios/jvm-memory-leak.js
+   PASS  exists: js/scenarios/cpu-spin-thread.js
+   PASS  exists: js/scenarios/fix-seqnum-gap.js
+   PASS  exists: js/scenarios/nfs-hang-eod.js
+   PASS  exists: js/drills/logs-basics.js
+   PASS  exists: js/drills/tcp-basics.js
+   PASS  exists: js/drills/udp-multicast-basics.js
+   PASS  exists: js/drills/memory-basics.js
+   PASS  exists: js/drills/cpu-load-basics.js
+   PASS  exists: js/drills/networking-ip-basics.js
+   PASS  exists: js/drills/processes-signals-basics.js
+   PASS  exists: js/drills/disk-filesystem-basics.js
+   PASS  exists: js/drills/shell-evidence.js
+   PASS  exists: js/drills/text-investigation.js
+   PASS  exists: js/drills/file-discovery.js
+   PASS  exists: js/drills/permissions-support.js
+   PASS  exists: js/drills/fix-support.js
+   PASS  exists: js/drills/service-batch-time.js
+   PASS  exists: js/interview-data.js
+   PASS  exists: js/interview.js
+   PASS  exists: js/terminal.js
+   PASS  exists: js/game.js
+   PASS  exists: js/drill.js
+   PASS  exists: js/main.js
+   PASS  no ES modules (file:// safe)
+   PASS  every scenario file has a <script> tag
+   PASS  scenarios load after the engine
+   PASS  scenarios load before the terminal
+   PASS  script order: main.js last
+   PASS  stylesheet exists
+
+=== load in DOM sandbox ===
+   PASS  all files loaded
+   PASS  PS.scenarios populated
+   PASS  PS.Terminal defined
+   PASS  PS.Game defined
+
+=== simulate DOMContentLoaded + play a round ===
+   PASS  DOMContentLoaded handler registered
+   PASS  game object created
+   PASS  scenario list rendered
+   PASS  game panel unhidden
+   PASS  boot panel hidden
+   PASS  header title set
+   PASS  pager brief rendered
+   PASS  findings list rendered
+   PASS  banner written to terminal
+   PASS  finding awarded from ss
+   PASS  find-count updated
+   PASS  thread dump finding
+   PASS  output rendered as html spans
+   PASS  diagnose lists causes
+   PASS  wrong diagnosis penalised
+   PASS  right diagnosis accepted
+   PASS  incident finished on fix
+   PASS  modal shown
+   PASS  modal has debrief
+   PASS  modal has score total
+   PASS  best score persisted
+
+=== Basics track: play a drill ===
+   PASS  PS.Drill defined
+   PASS  drills loaded
+   PASS  drill cards rendered
+   PASS  drill runner is active
+   PASS  header switched to BASICS
+   PASS  panel relabelled to Tasks
+   PASS  impact metric relabelled
+   PASS  task list rendered
+   PASS  first task shown in terminal
+   PASS  shell works in drill mode
+   PASS  wrong answer rejected
+   PASS  right answer accepted
+   PASS  progress counter updated
+   PASS  advanced to task 2
+   PASS  teaching note shown after correct
+   PASS  hint returns text
+   PASS  hint recorded against current task
+   PASS  solution marks the task
+   PASS  skip moves on
+   PASS  drill finished
+   PASS  completion modal shown
+   PASS  modal has command sheet
+   PASS  modal lists a solution
+   PASS  modal has wrap-up
+   PASS  drill score saved
+   PASS  labels restored for incidents
+   PASS  incident runner active again
+
+=== hang path (dead NFS mount) ===
+   PASS  touching dead mount starts a hang app
+   PASS  Ctrl+C clears the hang
+   PASS  replica does not hang
+
+=== complete curriculum and interview practice ===
+   PASS  every drill is available in browser
+   PASS  question bank has broad coverage
+   PASS  question IDs are unique
+   PASS  every question has an answer and follow-up
+   PASS  every topic has primary reference links
+   PASS  live coverage count includes all drills
+   PASS  interview tab opens and marks selection
+   PASS  other tracks hidden
+   PASS  cannot rate without revealing guide
+   PASS  guide reveals model answer and references
+   PASS  confidence saved separately from incident scores
+   PASS  next question hides answer
+   PASS  previous returns to question
+   PASS  topic filter selects FIX
+   PASS  empty search is handled
+   PASS  confidence filter uses saved rating
+   PASS  mock draws 20 distinct questions
+   PASS  mock summary distinguishes rated and skipped
+   PASS  study can restart after mock
+   PASS  terminal drill navigation remains available
+
+all DOM checks passed
+
+All five suites passed.

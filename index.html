@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEV1 — Production Support Simulator</title>
+<meta name="description" content="Linux interview practice for investment bank and hedge fund production support: terminal drills, incident response and interview questions.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="boot" class="boot">
+  <div class="boot-inner">
+    <pre class="logo">
+   ███████ ███████ ██    ██  ██
+   ██      ██      ██    ██ ███
+   ███████ █████   ██    ██  ██
+        ██ ██       ██  ██   ██
+   ███████ ███████   ████    ██
+    </pre>
+    <div class="tagline">PRODUCTION SUPPORT SIMULATOR &mdash; front-office incident response</div>
+    <div class="boot-sub">Linux interview preparation for investment bank and hedge fund support desks.</div>
+    <div id="coverage-count" class="coverage-count"></div>
+    <nav class="track-tabs" aria-label="Choose a training track">
+      <button id="tab-basics" class="track-tab selected" aria-pressed="true">Terminal drills</button>
+      <button id="tab-incidents" class="track-tab" aria-pressed="false">Incident investigations</button>
+      <button id="tab-interview" class="track-tab" aria-pressed="false">Interview practice</button>
+    </nav>
+
+    <div id="track-basics" class="track">
+      <h2 class="track-h">BASICS<span>short drills &mdash; one question, one command, one answer</span></h2>
+      <div id="drill-list" class="scenario-list"></div>
+    </div>
+
+    <div id="track-incidents" class="track hidden">
+      <h2 class="track-h">INCIDENTS<span>full investigations &mdash; find the root cause, then fix it</span></h2>
+      <div id="scenario-list" class="scenario-list"></div>
+    </div>
+
+    <section id="track-interview" class="track hidden" aria-label="Interview practice">
+      <h2 class="track-h">INTERVIEW PRACTICE<span>explain your reasoning, compare an answer, then rate your confidence</span></h2>
+      <p class="interview-intro">Work through the question bank or take a random interview of up to 20 matching questions. These are discussion questions; your notes are not automatically graded.</p>
+      <div class="interview-controls">
+        <label>Topic<select id="interview-topic"><option value="">All topics</option></select></label>
+        <label>Search<input id="interview-search" type="search" placeholder="grep -i, FIX, CPU, last 30 days…"></label>
+        <label>Review<select id="interview-filter"><option value="">All questions</option><option value="new">Not rated yet</option><option value="review">Needs practice</option><option value="confident">Confident</option></select></label>
+      </div>
+      <div class="interview-actions">
+        <button id="interview-study" class="btn">Study matching questions</button>
+        <button id="interview-mock" class="btn primary">Start mock interview</button>
+      </div>
+      <p id="interview-progress" class="interview-progress" aria-live="polite"></p>
+      <div class="interview-meta"><span id="interview-mode"></span><span id="interview-counter"></span></div>
+      <div id="interview-empty" class="interview-empty hidden" role="status"></div>
+      <article id="interview-card" class="interview-card">
+        <div id="interview-topic-label" class="interview-topic-label"></div>
+        <h3 id="interview-question" aria-live="polite"></h3>
+        <label class="interview-notes-label" for="interview-notes">Your answer — say it aloud or jot down your reasoning</label>
+        <textarea id="interview-notes" rows="3" placeholder="What would you check, what would it prove, and what would you do next?"></textarea>
+        <button id="interview-reveal" class="btn primary">Reveal answer guide</button>
+        <div id="interview-answer" class="interview-answer hidden">
+          <h4>Answer guide</h4><p id="interview-model"></p>
+          <div id="interview-example-wrap"><h4>GNU/Linux example — reference only</h4><pre id="interview-example"></pre></div>
+          <h4>Watch for this</h4><p id="interview-trap"></p>
+          <details><summary>Topic references</summary><div id="interview-sources" class="interview-sources"></div></details>
+        </div>
+        <div id="interview-rating" class="interview-rating hidden">
+          <span>Could you explain it without the guide?</span>
+          <button id="interview-review" class="btn">Needs practice</button>
+          <button id="interview-confident" class="btn">Confident</button>
+        </div>
+        <p id="interview-self-rating" class="interview-self-rating" aria-live="polite"></p>
+      </article>
+      <div class="interview-navigation"><button id="interview-prev" class="btn">Previous</button><button id="interview-next" class="btn">Next question</button></div>
+      <p id="interview-storage" class="interview-note">Confidence ratings stay in this browser. Scratch notes are cleared when you move to another question.</p>
+    </section>
+
+    <div class="boot-foot">Start with a terminal drill, explain the topic in interview practice, then investigate a P1.</div>
+    <details class="scope-note"><summary>Coverage and simulator limits</summary><p>This is broad preparation, not a guarantee of every interview question. The terminal models a selected GNU/Linux command subset and simplified machine snapshots. Use <code>help</code> and <code>man command</code> inside a drill. Interview examples are real-system references and may use flags or tools outside the simulator. Distribution, kernel, JDK and counterparty behavior can vary. Production changes follow the firm’s runbooks, access rules and business controls.</p></details>
+  </div>
+</div>
+
+<div id="game" class="game hidden">
+
+  <header class="hud">
+    <div class="hud-left">
+      <span id="sev" class="sev">P1</span>
+      <span id="inc-title" class="inc-title">&mdash;</span>
+      <span id="inc-desk" class="inc-desk">&mdash;</span>
+    </div>
+    <div class="hud-right">
+      <div class="metric"><span class="metric-label">ELAPSED</span><span id="clock" class="metric-val">00:00</span></div>
+      <div class="metric"><span id="impact-label" class="metric-label">IMPACT</span><span id="impact" class="metric-val bad">0</span></div>
+      <div class="metric"><span class="metric-label">SCORE</span><span id="score" class="metric-val good">1000</span></div>
+      <button id="btn-quit" class="btn" title="Abandon incident and return to the list">STAND DOWN</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="term-wrap">
+      <div id="term" class="term" tabindex="0">
+        <div id="out" class="out"></div>
+        <div id="inputline" class="inputline">
+          <span id="ps1" class="ps1"></span><input id="cmd" class="cmd" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        </div>
+      </div>
+      <pre id="app" class="app hidden"></pre>
+    </section>
+
+    <aside class="side">
+      <div class="panel">
+        <h2 id="brief-title">Pager</h2>
+        <div id="brief" class="brief"></div>
+      </div>
+      <div class="panel grow">
+        <h2><span id="list-title">Findings</span> <span id="find-count" class="count">0/0</span></h2>
+        <ul id="findings" class="findings"></ul>
+      </div>
+      <div class="panel">
+        <h2 id="help-title">Escalation</h2>
+        <button id="btn-hint" class="btn wide">REQUEST HINT <span id="hint-cost" class="cost">(-75)</span></button>
+        <div id="panel-note" class="panel-note">Type <code>diagnose</code> when you know the root cause. Then fix it for real.</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="statusbar">
+    <span id="status">ready</span>
+    <span class="spacer"></span>
+    <span class="keys"><kbd>Tab</kbd> complete &middot; <kbd>&uarr;</kbd> history &middot; <kbd>Ctrl+C</kbd> interrupt &middot; <kbd>help</kbd> commands</span>
+  </footer>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <h2 id="modal-title">Incident resolved</h2>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button id="modal-close" class="btn">BACK TO INCIDENT LIST</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/vfs.js"></script>
+<script src="js/world.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/commands/core.js"></script>
+<script src="js/commands/sys.js"></script>
+<script src="js/commands/net.js"></script>
+<script src="js/commands/java.js"></script>
+<script src="js/commands/ops.js"></script>
+<script src="js/scenarios/disk-full-deleted-fd.js"></script>
+<script src="js/scenarios/market-data-frozen.js"></script>
+<script src="js/scenarios/jvm-memory-leak.js"></script>
+<script src="js/scenarios/cpu-spin-thread.js"></script>
+<script src="js/scenarios/fix-seqnum-gap.js"></script>
+<script src="js/scenarios/nfs-hang-eod.js"></script>
+<script src="js/drills/logs-basics.js"></script>
+<script src="js/drills/tcp-basics.js"></script>
+<script src="js/drills/udp-multicast-basics.js"></script>
+<script src="js/drills/memory-basics.js"></script>
+<script src="js/drills/cpu-load-basics.js"></script>
+<script src="js/drills/networking-ip-basics.js"></script>
+<script src="js/drills/processes-signals-basics.js"></script>
+<script src="js/drills/disk-filesystem-basics.js"></script>
+<script src="js/drills/shell-evidence.js"></script>
+<script src="js/drills/text-investigation.js"></script>
+<script src="js/drills/file-discovery.js"></script>
+<script src="js/drills/permissions-support.js"></script>
+<script src="js/drills/fix-support.js"></script>
+<script src="js/drills/service-batch-time.js"></script>
+<script src="js/interview-data.js"></script>
+<script src="js/interview.js"></script>
+<script src="js/terminal.js"></script>
+<script src="js/game.js"></script>
+<script src="js/drill.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

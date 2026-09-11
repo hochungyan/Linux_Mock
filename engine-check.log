@@ -1,0 +1,155 @@
+
+=== shell fundamentals ===
+   PASS  echo
+   PASS  pipe into grep -c
+   PASS  $HOME expansion
+   PASS  cd + pwd
+   PASS  glob expands
+   PASS  redirect to file then cat
+   PASS  && short circuit
+   PASS  || runs on failure
+   PASS  command not found -> 127
+   PASS  pipe strips colour
+   PASS  printf hex (TID->nid)
+   PASS  wc -l over pipe
+   PASS  tail -n
+   PASS  tail -N shorthand
+   PASS  find -name
+   PASS  grep -i case insensitive
+
+=== S1 disk full / deleted fd ===
+   PASS  df shows /var at 100%
+   PASS  df -i shows healthy inodes
+   PASS  du /var reports far less than df
+   PASS  lsof +L1 finds deleted file
+   PASS  deleted file shows the big size
+   PASS  app log shows ENOSPC
+   PASS  findings before fix
+   PASS  not yet fixed
+   PASS  truncate via /proc/pid/fd reclaims space
+   PASS  graded as clean
+   PASS  df now healthy
+   PASS  restart also frees space
+   PASS  restart graded blunt
+   PASS  kill -9 frees space
+   PASS  kill graded worst
+   PASS  truncate -s 0 form works
+
+=== S2 market data frozen ===
+   PASS  tail shows last publish 08:47
+   PASS  process alive in ps
+   PASS  ss -unp shows large Recv-Q
+   PASS  netstat -su shows receive buffer errors
+   PASS  ip -s link shows feed NIC counters
+   PASS  jstack dumps threads
+   PASS  dispatch threads BLOCKED on InstrumentCache
+   PASS  lock holder in socketRead0
+   PASS  dumpTaken flag set
+   PASS  ping refdata-db-ldn fails
+   PASS  conf shows timeout=0
+   PASS  findings gathered
+   PASS  not fixed yet
+   PASS  failover endpoint responds
+   PASS  fixed after failover
+   PASS  graded clean
+   PASS  threads unblocked after fix
+   PASS  restart also clears it
+   PASS  restart graded blunt
+
+=== S3 JVM memory leak ===
+   PASS  gc log shows futile Full GCs
+   PASS  jstat shows old gen ~99
+   PASS  jmap -heap shows near-full heap
+   PASS  histogram names the leak class
+   PASS  dmesg shows the oom kill
+   PASS  free shows swapping
+   PASS  top -H exposes GC threads
+   PASS  conf shows unbounded cache
+   PASS  findings gathered
+   PASS  heap dump succeeds
+   PASS  heapDumped flag set
+   PASS  restart fixes
+   PASS  dump-then-restart graded clean
+   PASS  restart without dump graded blunt
+   PASS  forced GC does not save a leak
+
+=== S4 CPU spin thread ===
+   PASS  top shows java ~100%
+   PASS  top -H isolates hot thread 4913
+   PASS  hex conversion
+   PASS  jstack nid match finds spinner
+   PASS  config shows unsynchronised map
+   PASS  gc is innocent
+   PASS  findings gathered
+   PASS  drain works
+   PASS  fixed
+   PASS  drain+restart graded clean
+   PASS  cold restart graded blunt
+
+=== S5 FIX sequence gap ===
+   PASS  app log shows the reject reason
+   PASS  FIX message log has 35=5 logout
+   PASS  client reconnect churn visible
+   PASS  store file has 88413
+   PASS  cfg shows ResetOnLogon=N
+   PASS  other sessions healthy
+   PASS  findings gathered
+   PASS  reset fixes session
+   PASS  graded clean
+   PASS  store file updated
+   PASS  restart alone does NOT fix it
+
+=== S6 NFS hang / EOD batch ===
+   PASS  autorep shows RU job
+   PASS  ps shows sqlldr
+   PASS  D state and wchan visible
+   PASS  dmesg shows nfs stall
+   PASS  nas-ldn-01 unreachable
+   PASS  nas-ldn-02 reachable
+   PASS  fstab shows hard mount
+   PASS  kill -9 refused on D state
+   PASS  process survives kill -9
+   PASS  replica readable
+   PASS  hungPaths set
+   PASS  findings gathered
+   PASS  DR start blocked while original runs
+   PASS  DR job starts
+   PASS  DR job completes and releases batch
+   PASS  graded clean
+   PASS  downstream released
+   PASS  false success "works"
+   PASS  but is penalised hard
+
+=== cross-scenario sanity ===
+   PASS  cpu-spin-thread: exactly one correct root cause
+   PASS  cpu-spin-thread: has hints
+   PASS  cpu-spin-thread: has debrief
+   PASS  cpu-spin-thread: starts unfixed
+   PASS  cpu-spin-thread: core diagnostics all run
+   PASS  disk-full-deleted-fd: exactly one correct root cause
+   PASS  disk-full-deleted-fd: has hints
+   PASS  disk-full-deleted-fd: has debrief
+   PASS  disk-full-deleted-fd: starts unfixed
+   PASS  disk-full-deleted-fd: core diagnostics all run
+   PASS  fix-seqnum-gap: exactly one correct root cause
+   PASS  fix-seqnum-gap: has hints
+   PASS  fix-seqnum-gap: has debrief
+   PASS  fix-seqnum-gap: starts unfixed
+   PASS  fix-seqnum-gap: core diagnostics all run
+   PASS  jvm-memory-leak: exactly one correct root cause
+   PASS  jvm-memory-leak: has hints
+   PASS  jvm-memory-leak: has debrief
+   PASS  jvm-memory-leak: starts unfixed
+   PASS  jvm-memory-leak: core diagnostics all run
+   PASS  market-data-frozen: exactly one correct root cause
+   PASS  market-data-frozen: has hints
+   PASS  market-data-frozen: has debrief
+   PASS  market-data-frozen: starts unfixed
+   PASS  market-data-frozen: core diagnostics all run
+   PASS  nfs-hang-eod: exactly one correct root cause
+   PASS  nfs-hang-eod: has hints
+   PASS  nfs-hang-eod: has debrief
+   PASS  nfs-hang-eod: starts unfixed
+   PASS  nfs-hang-eod: core diagnostics all run
+
+all engine checks passed
