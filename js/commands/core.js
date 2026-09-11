@@ -1016,6 +1016,57 @@
 
   /* ---------- identity / misc ---------- */
 
+  // Metadata practice. Real kernel ownership, capabilities and ACL enforcement
+  // are outside this VFS; individual incidents validate their effective access.
+  reg('chmod', function (argv, io, ctx) {
+    var a = sh.parseArgs(argv, { bool: 'R' });
+    if (Object.keys(a.flags).some(function (f) { return f !== 'R'; })) return { err: 'chmod: supported subset is [-R] OCTAL_MODE FILE...', code: 2 };
+    var mode = a.rest.shift();
+    if (!/^[0-7]{3,4}$/.test(mode || '') || !a.rest.length) return { err: 'chmod: use an octal mode such as 640 followed by a path; symbolic modes are not simulated', code: 2 };
+    var bits = parseInt(mode, 8), errors = [];
+    function change(node, recursive) {
+      var text = node.type === 'dir' ? 'd' : '-';
+      [6, 3, 0].forEach(function (shift) {
+        var n = (bits >> shift) & 7;
+        text += (n & 4 ? 'r' : '-') + (n & 2 ? 'w' : '-') + (n & 1 ? 'x' : '-');
+      });
+      if (bits & 2048) text = text.slice(0, 3) + (bits & 64 ? 's' : 'S') + text.slice(4);
+      if (bits & 1024) text = text.slice(0, 6) + (bits & 8 ? 's' : 'S') + text.slice(7);
+      if (bits & 512) text = text.slice(0, 9) + (bits & 1 ? 't' : 'T');
+      node.mode = text; node.ctime = new Date(ctx.world.clock.getTime());
+      if (recursive && node.children) Object.keys(node.children).forEach(function (name) {
+        if (node.children[name].type !== 'link') change(node.children[name], true);
+      });
+    }
+    a.rest.forEach(function (path) {
+      var node = look(ctx, path);
+      if (!node) errors.push('chmod: cannot access ' + path + ': No such file or directory');
+      else change(node, a.has('R'));
+    });
+    return { err: errors.join('\n'), code: errors.length ? 1 : 0 };
+  }, { help: 'change simulated mode: chmod 640 FILE', detail: 'Numeric modes and -R only. Changes VFS metadata; real user/ACL enforcement is not simulated.' });
+
+  reg('chown', function (argv, io, ctx) {
+    var a = sh.parseArgs(argv, { bool: 'R' });
+    if (Object.keys(a.flags).some(function (f) { return f !== 'R'; })) return { err: 'chown: supported subset is [-R] OWNER[:GROUP] FILE...', code: 2 };
+    var identity = a.rest.shift() || '', match = /^([A-Za-z0-9_.-]+)(?::([A-Za-z0-9_.-]+))?$/.exec(identity);
+    if (!match || !a.rest.length) return { err: 'chown: use OWNER[:GROUP] followed by one or more paths', code: 2 };
+    var errors = [];
+    function change(node, recursive) {
+      node.owner = match[1]; if (match[2]) node.group = match[2];
+      node.ctime = new Date(ctx.world.clock.getTime());
+      if (recursive && node.children) Object.keys(node.children).forEach(function (name) {
+        if (node.children[name].type !== 'link') change(node.children[name], true);
+      });
+    }
+    a.rest.forEach(function (path) {
+      var node = look(ctx, path);
+      if (!node) errors.push('chown: cannot access ' + path + ': No such file or directory');
+      else change(node, a.has('R'));
+    });
+    return { err: errors.join('\n'), code: errors.length ? 1 : 0 };
+  }, { help: 'change simulated ownership: chown appsvc:appsvc FILE', detail: 'OWNER or OWNER:GROUP, optional -R. Identity lookup and privilege enforcement are not modeled.' });
+
   reg('whoami', function (argv, io, ctx) { return ctx.world.user; }, { help: 'current user' });
   reg('hostname', function (argv, io, ctx) { return ctx.world.host; }, { help: 'host name' });
 

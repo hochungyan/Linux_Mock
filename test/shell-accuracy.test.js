@@ -146,4 +146,17 @@ test('directory copies and moves preserve content and failed moves preserve the 
   assert.equal(read('/tmp/renamed/nested/data'), 'valuable');
 });
 
+test('permission repairs modify the intended metadata and reject invalid modes', () => {
+  put('/tmp/permission-file', 'config');
+  assert.equal(run('chmod 640 /tmp/permission-file').code, 0);
+  const node = V.lookup(world.root, '/tmp/permission-file');
+  assert.equal(node.mode, '-rw-r-----');
+  assert.equal(run('chown pricing:pricing /tmp/permission-file').code, 0);
+  assert.equal(node.owner, 'pricing'); assert.equal(node.group, 'pricing');
+  assert.notEqual(run('chmod 999 /tmp/permission-file').code, 0);
+  assert.equal(node.mode, '-rw-r-----');
+  assert.notEqual(run('chmod 640 /missing').code, 0);
+  assert.equal(run('chmod 4750 /tmp/permission-file').code, 0);
+  assert.equal(node.mode, '-rwsr-x---');
+});
 console.log(`\n${checks} shell accuracy groups passed.`);

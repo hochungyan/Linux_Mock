@@ -2,11 +2,15 @@
 
 Linux interview preparation for investment bank and hedge fund production support / application support.
 
-**186 practical questions in 14 packs, 160 interview questions across 22 topics, and six incident investigations.**
+**186 practical questions in 14 packs, 160 interview questions across 22 topics, and ten incident investigations.**
 
 ## Run
 
 Double-click `start.bat`, or run `node serve.js` and open [the local game](http://localhost:8099/). No dependencies or build step are required. Opening `index.html` directly also works; browser policy determines whether progress can be saved on a file URL.
+
+## Render / Docker
+
+Render can deploy this repository as a Docker Web Service using the root `Dockerfile`. The server honors Render's injected `PORT`; no build command or application dependencies are required.
 
 ## Three tracks
 
@@ -45,6 +49,10 @@ The [coverage guide](docs/COVERAGE.md) lists all 22 interview topics, requested 
 4. Order acks slow — native thread ID to Java stack and CPU spin.
 5. FIX session flapping — agreed, reconciled per-session recovery.
 6. EOD load hung — genuinely uninterruptible wait and fence-before-DR recovery.
+7. Risk checks timeout — every connection held by an idle transaction during an unbounded remote wait.
+8. Order acknowledgements stop — a descriptor leak leaves the adapter at its file limit.
+9. Settlement files fail — empty retry markers exhaust inodes while bytes remain free.
+10. Risk container restarts — native memory pushes a worker cgroup over its hard limit.
 
 Scenario HTTP admin endpoints, write leases and scheduler behavior are fictional training mechanisms, not generic Linux/FIX/AutoSys APIs.
 
@@ -68,5 +76,4 @@ The suites cover scenario recovery, drill solution evidence, shell accuracy, sys
 
 See [Adding scenarios](docs/ADDING-SCENARIOS.md). Add drill files under `js/drills/` and their script tags in `index.html`. Interview questions are in `js/interview-data.js`; screen counts are calculated from the data. Update the coverage guide and rerun checks after changes.
 
-This remains a local, dependency-free game; no hosting deployment was performed.
-
+This remains a dependency-free game. The included Dockerfile runs the same server used locally and is suitable for a Render Web Service.

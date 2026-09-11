@@ -105,7 +105,8 @@ for (const f of FILES) {
 }
 check('all files loaded', fails === 0);
 const PS = sandbox.PS;
-check('PS.scenarios populated', PS.scenarios && PS.scenarios.length === scenarioDir.length, PS.scenarios && PS.scenarios.length);
+// A scenario file may register a small family of related investigations.
+check('PS.scenarios populated', PS.scenarios && PS.scenarios.length >= scenarioDir.length, PS.scenarios && PS.scenarios.length);
 check('PS.Terminal defined', typeof PS.Terminal === 'function');
 check('PS.Game defined', typeof PS.Game === 'function');
 
