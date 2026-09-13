@@ -12,6 +12,7 @@
 
   PS.scenarios.push({
     id: 'fix-seqnum-gap',
+    track: 'fix',
     title: 'Client FIX session flapping at the open',
     severity: 'P1',
     desk: 'Electronic Trading / Client Connectivity',

@@ -912,6 +912,8 @@
         fs.used = Math.max(0, fs.used - size);
         if (fs.inodes) fs.inodes.used = Math.max(0, fs.inodes.used - 1);
       }
+      // Let the scenario judge WHAT was removed, not just how much space it freed.
+      if (typeof world.onRemove === 'function') world.onRemove(world, target, size);
     });
     return { out: '', err: errs.join('\n'), code: errs.length ? 1 : 0 };
   }, { help: 'remove files (-r -f)' });
@@ -941,6 +943,9 @@
       if (!parent || parent.type !== 'dir') { errs.push('cp: destination parent does not exist'); return; }
       if (existing && (node.type === 'dir' || existing.type === 'dir')) { errs.push('cp: merging existing directories is not supported in this simulator'); return; }
       parent.children[V.basename(target)] = copy(node);
+      // Scenarios that model file *content* outside the tree - certificates,
+      // for example - need to know which path was overwritten with which.
+      if (typeof ctx.world.onCopy === 'function') ctx.world.onCopy(ctx.world, source, target);
     });
     return { out: '', err: errs.join('\n'), code: errs.length ? 1 : 0 };
   }, { help: 'copy files' });
@@ -1077,9 +1082,26 @@
 
   reg('date', function (argv, io, ctx) {
     var world = ctx.world;
-    if (argv[1] === '-u' || argv[1] === '--utc') return W.dateStr(world.clock);
+    var a = sh.parseArgs(argv, { bool: 'uR', value: 'sd' });
+
+    // date -s STEPS the clock. On a trading host that is a reportable event:
+    // it breaks the monotonic ordering of timestamps that has already been
+    // written to the audit trail. The scenario decides what that costs.
+    if (a.vals.s != null) {
+      var target = new Date(a.vals.s);
+      if (isNaN(target.getTime())) {
+        return { err: 'date: invalid date ‘' + a.vals.s + '’', code: 1 };
+      }
+      var deltaMs = target.getTime() - world.clock.getTime();
+      world.clock = target;
+      world.flags.clockStepped = true;
+      world.flags.clockStepMs = (world.flags.clockStepMs || 0) + deltaMs;
+      if (typeof world.onClockStep === 'function') world.onClockStep(world, deltaMs);
+      return W.dateStr(world.clock);
+    }
+
     return W.dateStr(world.clock);
-  }, { help: 'current date/time' });
+  }, { help: 'current date/time (-s sets it, which steps the clock)' });
 
   reg('env', function (argv, io, ctx) {
     var w = ctx.world;

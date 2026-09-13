@@ -5,19 +5,22 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
+const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 
 const IDS = ['boot', 'scenario-list', 'drill-list', 'game', 'sev', 'inc-title', 'inc-desk',
   'term', 'out', 'inputline', 'ps1', 'cmd', 'app', 'brief', 'brief-title', 'list-title',
   'help-title', 'panel-note', 'findings', 'find-count', 'btn-hint', 'hint-cost',
   'clock', 'impact', 'impact-label', 'score', 'status', 'modal', 'modal-title',
   'modal-body', 'modal-close', 'btn-quit', 'toasts'].concat(
-    Array.from(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').matchAll(/\bid="([^"]+)"/g), m => m[1])
+    Array.from(html.matchAll(/\bid="([^"]+)"/g), m => m[1])
   );
 
 function El(tag, id) {
   return {
     tagName: tag, id: id || '', children: [], _html: '', _text: '',
-    className: '', style: {}, value: '', disabled: false, onclick: null,
+    style: {}, value: '', disabled: false, onclick: null,
+    get className() { return Array.from(this.classList._s).join(' '); },
+    set className(value) { this.classList._s = new Set(String(value).split(/\s+/).filter(Boolean)); },
     classList: {
       _s: new Set(),
       add(c) { this._s.add(c); }, remove(c) { this._s.delete(c); },
@@ -34,14 +37,21 @@ function El(tag, id) {
     appendChild(c) { this.children.push(c); return c; },
     removeChild(c) { this.children = this.children.filter(x => x !== c); },
     addEventListener() {}, removeEventListener() {},
-    setAttribute(name, value) { this[name] = String(value); },
-    setSelectionRange() {}, focus() {}, blur() {},
+    setAttribute(name, value) { this[name === 'class' ? 'className' : name] = String(value); },
+    getAttribute(name) { return this[name === 'class' ? 'className' : name] ?? null; },
+    setSelectionRange() {}, focus() { document.activeElement = this; }, blur() {},
     get parentNode() { return null; }
   };
 }
 
 const els = {};
 IDS.forEach(id => { els[id] = El('div', id); });
+// Start with the actual markup's classes and ARIA state, as a browser would.
+for (const match of html.matchAll(/<([\w-]+)\b([^>]*\bid="([^"]+)"[^>]*)>/g)) {
+  const el = els[match[3]];
+  el.tagName = match[1];
+  for (const attr of match[2].matchAll(/([\w-]+)="([^"]*)"/g)) el.setAttribute(attr[1], attr[2]);
+}
 
 const document = {
   _els: els,
@@ -70,7 +80,6 @@ function check(label, cond, detail) {
 }
 
 // ---- verify index.html references exactly the files that exist ----
-const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const referenced = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]);
 console.log('\n=== index.html script tags ===');
 referenced.forEach(r => {
@@ -110,13 +119,113 @@ check('PS.scenarios populated', PS.scenarios && PS.scenarios.length >= scenarioD
 check('PS.Terminal defined', typeof PS.Terminal === 'function');
 check('PS.Game defined', typeof PS.Game === 'function');
 
+// Scores created before FIX became a separate track must follow the same IDs.
+sandbox.localStorage.setItem('sev1.results.v1', JSON.stringify({
+  'fix-seqnum-gap': { score: 9876, seconds: 42 }
+}));
+
 console.log('\n=== simulate DOMContentLoaded + play a round ===');
 const handlers = (document._h && document._h.DOMContentLoaded) || [];
 check('DOMContentLoaded handler registered', handlers.length === 1);
 try { handlers.forEach(h => h()); } catch (e) { check('boot handler runs', false, e.stack); }
 check('game object created', !!PS.game);
-check('scenario list rendered', els['scenario-list'].children.length === PS.scenarios.length,
+const generalScenarios = PS.scenarios.filter(s => s.track !== 'fix');
+const fixScenarios = PS.scenarios.filter(s => s.track === 'fix');
+check('scenario list rendered', els['scenario-list'].children.length === generalScenarios.length,
   els['scenario-list'].children.length);
+
+console.log('\n=== four training tracks: separation and counts ===');
+const tracks = ['basics', 'incidents', 'fix', 'interview'];
+const trackNav = /<nav\b[^>]*class="track-tabs"[^>]*>([\s\S]*?)<\/nav>/.exec(html);
+const navTracks = trackNav ? Array.from(trackNav[1].matchAll(/\bid="tab-([^"]+)"/g), m => m[1]) : [];
+check('all four tabs share one navigation, with incidents and FIX adjacent',
+  navTracks.slice().sort().join(',') === tracks.slice().sort().join(',') &&
+  Math.abs(navTracks.indexOf('incidents') - navTracks.indexOf('fix')) === 1);
+function selectedTrack(id) {
+  return tracks.every(other => els['track-' + other] && els['tab-' + other] &&
+    els['track-' + other].classList.contains('hidden') === (other !== id) &&
+    els['tab-' + other].classList.contains('selected') === (other === id) &&
+    els['tab-' + other].getAttribute('aria-pressed') === String(other === id) &&
+    els['tab-' + other].getAttribute('aria-controls') === 'track-' + other);
+}
+function cardIds(hostId) {
+  return (els[hostId] ? els[hostId].children : []).map(card => card.getAttribute('data-id'));
+}
+function checkCounts(label) {
+  const general = PS.scenarios.filter(s => s.track !== 'fix').length;
+  const fix = PS.scenarios.filter(s => s.track === 'fix').length;
+  const practical = PS.drills.reduce((n, p) => n + p.tasks.length, 0);
+  check(label + ': exact overall count and subtotals', els['coverage-count'].textContent ===
+    practical + ' practical questions · ' + PS.scenarios.length + ' incidents total (' +
+    general + ' general · ' + fix + ' FIX) · ' + PS.interview.questions.length + ' interview questions');
+  check(label + ': section counts match each list', els['incident-count'] && els['fix-count'] &&
+    els['incident-count'].textContent === general + ' incidents' &&
+    els['fix-count'].textContent === fix + ' FIX incidents');
+}
+check('incidents selected at boot, other panels hidden', selectedTrack('incidents'));
+check('general cards contain exactly non-FIX scenarios in source order',
+  cardIds('scenario-list').join(',') === generalScenarios.map(s => s.id).join(','));
+check('FIX cards contain exactly FIX scenarios in source order', fixScenarios.length > 0 &&
+  cardIds('fix-scenario-list').join(',') === fixScenarios.map(s => s.id).join(','));
+const allCardIds = cardIds('scenario-list').concat(cardIds('fix-scenario-list'));
+check('every incident appears once across the two lists', allCardIds.length === PS.scenarios.length &&
+  new Set(allCardIds).size === PS.scenarios.length);
+checkCounts('initial rendering');
+for (const id of tracks) {
+  if (els['tab-' + id]) els['tab-' + id].onclick();
+  check(id + ' tab selects only its own panel and button', selectedTrack(id));
+}
+PS.renderScenarioList();
+check('rendering cards preserves interview tab selection', selectedTrack('interview'));
+
+// Exercise both completion and early exit through the actual FIX card/button wiring.
+const legacyFix = PS.scenarios.find(s => s.id === 'fix-seqnum-gap');
+const legacyCard = els['fix-scenario-list'] && els['fix-scenario-list'].children.find(c =>
+  c.getAttribute('data-id') === 'fix-seqnum-gap');
+check('existing FIX case moves tracks without changing its score ID', legacyFix && legacyFix.track === 'fix' &&
+  legacyCard && legacyCard.children[0].innerHTML.includes('best 9876'));
+if (legacyCard) {
+  els['tab-fix'].onclick();
+  legacyCard.onclick();
+  check('FIX card starts the incident runner with FIX return destination', PS.active === PS.game &&
+    PS.game.scenario === legacyFix && selectedTrack('fix') &&
+    els['modal-close'].textContent === 'BACK TO FIX INCIDENTS');
+  PS.game.run('curl http://localhost:9980/admin/session/GSCLIENT1/status');
+  check('FIX terminal diagnostics run', els.out.children.some(c => /REJECTED_SEQNUM_TOO_LOW/.test(c.innerHTML)));
+  PS.game.submitDiagnosis(legacyFix.rootCauses.findIndex(c => c.correct));
+  PS.game.run('curl http://localhost:9980/admin/session/GSCLIENT1/reset');
+  check('FIX recovery finishes and opens debrief', PS.game.finished && !els.modal.classList.contains('hidden'));
+  check('lower score keeps the legacy best and completion time', PS.loadResults()['fix-seqnum-gap'].score === 9876 &&
+    PS.loadResults()['fix-seqnum-gap'].seconds === 42);
+  els['modal-close'].onclick();
+  check('FIX debrief returns to FIX list and restores keyboard focus', selectedTrack('fix') &&
+    !els.boot.classList.contains('hidden') && els.game.classList.contains('hidden') &&
+    els.modal.classList.contains('hidden') && document.activeElement === els['tab-fix']);
+  els['tab-incidents'].onclick();
+  PS.startScenario(legacyFix);
+  check('direct FIX start selects FIX even from another tab', selectedTrack('fix'));
+  sandbox.confirm = () => false;
+  els['btn-quit'].onclick();
+  check('cancelled stand-down preserves the running FIX incident', !PS.game.finished &&
+    els.boot.classList.contains('hidden') && !els.game.classList.contains('hidden'));
+  sandbox.confirm = () => true;
+  els['btn-quit'].onclick();
+  check('confirmed stand-down returns to FIX', PS.game.finished && selectedTrack('fix') &&
+    !els.boot.classList.contains('hidden') && document.activeElement === els['tab-fix']);
+  checkCounts('after FIX completion and exit');
+}
+
+const registeredScenarios = PS.scenarios;
+PS.scenarios = [];
+PS.renderScenarioList();
+check('empty incident registry clears both card lists', cardIds('scenario-list').length === 0 &&
+  cardIds('fix-scenario-list').length === 0);
+checkCounts('empty incident registry');
+PS.scenarios = registeredScenarios;
+PS.renderScenarioList();
+checkCounts('restored incident registry');
+check('rerendering restores all cards without duplicates',
+  cardIds('scenario-list').concat(cardIds('fix-scenario-list')).length === PS.scenarios.length);
 
 // start the flagship scenario the way clicking a card would
 const flagship = PS.scenarios.find(s => s.id === 'market-data-frozen');
@@ -124,6 +233,8 @@ try { PS.startScenario(flagship); }
 catch (e) { check('startScenario', false, e.stack); }
 
 check('game panel unhidden', !els.game.classList.contains('hidden'));
+check('general incident start restores general return destination', selectedTrack('incidents') &&
+  els['modal-close'].textContent === 'BACK TO INCIDENT LIST');
 check('boot panel hidden', els.boot.classList.contains('hidden'));
 check('header title set', els['inc-title'].textContent.includes('Prices frozen'));
 check('pager brief rendered', els.brief.textContent.includes('vol surface'));
@@ -156,6 +267,10 @@ check('modal shown', !els.modal.classList.contains('hidden'));
 check('modal has debrief', /DEBRIEF/.test(els['modal-body'].innerHTML));
 check('modal has score total', /TOTAL/.test(els['modal-body'].innerHTML));
 check('best score persisted', /market-data-frozen/.test(sandbox.localStorage.getItem('sev1.results.v1') || ''));
+els['modal-close'].onclick();
+check('general debrief returns to incidents and restores keyboard focus', selectedTrack('incidents') &&
+  !els.boot.classList.contains('hidden') && els.game.classList.contains('hidden') &&
+  document.activeElement === els['tab-incidents']);
 
 console.log('\n=== Basics track: play a drill ===');
 check('PS.Drill defined', typeof PS.Drill === 'function');
@@ -169,6 +284,8 @@ try { PS.startDrill(pack); } catch (e) { check('startDrill', false, e.stack); }
 const d = PS.drill;
 
 check('drill runner is active', PS.active === d);
+check('drill start selects basics and names the return destination', selectedTrack('basics') &&
+  els['modal-close'].textContent === 'BACK TO TERMINAL DRILLS');
 check('header switched to BASICS', els.sev.textContent === 'BASICS');
 check('panel relabelled to Tasks', els['list-title'].textContent === 'Tasks');
 check('impact metric relabelled', els['impact-label'].textContent === 'TASK');
@@ -216,6 +333,13 @@ check('modal has command sheet', /COMMAND SHEET/.test(els['modal-body'].innerHTM
 check('modal lists a solution', /ss -tlnp/.test(els['modal-body'].innerHTML));
 check('modal has wrap-up', /WORTH REMEMBERING/.test(els['modal-body'].innerHTML));
 check('drill score saved', /tcp-basics/.test(sandbox.localStorage.getItem('sev1.results.v1') || ''));
+els['modal-close'].onclick();
+check('drill debrief returns to basics with keyboard focus', selectedTrack('basics') &&
+  !els.boot.classList.contains('hidden') && document.activeElement === els['tab-basics']);
+PS.startDrill(pack);
+els['btn-quit'].onclick();
+check('unfinished drill can stand down to basics', d.finished && selectedTrack('basics') &&
+  !els.boot.classList.contains('hidden'));
 
 // going back to an incident restores the incident labels
 PS.startScenario(PS.scenarios.find(s => s.id === 'disk-full-deleted-fd'));
@@ -235,6 +359,22 @@ g2.run('ls /mnt/eodshare2');
 check('replica does not hang', g2.term.app === null);
 
 console.log('\n=== complete curriculum and interview practice ===');
+check('incidents are the initial track', /id="tab-incidents"[^>]*aria-pressed="true"/.test(html) &&
+  /id="track-incidents" class="track"/.test(html));
+console.log('\n=== source-backed finance investigations in browser runner ===');
+const financeCases = PS.scenarios.filter(s => s.sources && s.walkthrough);
+check('four finance investigations include sources and playable walkthroughs', financeCases.length >= 4);
+for (const scenario of financeCases) {
+  PS.startScenario(scenario);
+  PS.game.submitDiagnosis(scenario.rootCauses.findIndex(c => c.correct));
+  scenario.walkthrough.forEach((command, index) => {
+    PS.game.run(command);
+    if (index < scenario.walkthrough.length - 1) check(scenario.id + ' remains open before final release ' + index, !PS.game.finished);
+  });
+  check(scenario.id + ' completes with business recovery', PS.game.finished && scenario.fix.check(PS.game.world));
+  check(scenario.id + ' debrief has clickable primary references', /PRIMARY REFERENCES/.test(els['modal-body'].innerHTML) && /rel="noopener noreferrer"/.test(els['modal-body'].innerHTML));
+}
+PS.game.abandon();
 const drillDir = fs.readdirSync(path.join(ROOT, 'js/drills')).filter(f => f.endsWith('.js'));
 check('every drill is available in browser', drillDir.every(f => referenced.includes('js/drills/' + f)));
 check('question bank has broad coverage', PS.interviewTopics.length >= 20 && PS.interview.questions.length >= 140);
@@ -244,7 +384,8 @@ check('every topic has primary reference links', PS.interviewTopics.every(t => t
 check('live coverage count includes all drills', els['coverage-count'].textContent.includes(String(PS.drills.reduce((n, p) => n + p.tasks.length, 0))));
 els['tab-interview'].onclick();
 check('interview tab opens and marks selection', !els['track-interview'].classList.contains('hidden') && els['tab-interview']['aria-pressed'] === 'true');
-check('other tracks hidden', els['track-basics'].classList.contains('hidden') && els['track-incidents'].classList.contains('hidden'));
+check('other tracks hidden', els['track-basics'].classList.contains('hidden') &&
+  els['track-incidents'].classList.contains('hidden') && els['track-fix'] && els['track-fix'].classList.contains('hidden'));
 const firstQuestion = els['interview-question'].textContent;
 els['interview-confident'].onclick();
 check('cannot rate without revealing guide', !sandbox.localStorage.getItem('sev1.interview.v1'));

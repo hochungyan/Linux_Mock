@@ -358,6 +358,14 @@
 
     body.push('<div class="debrief-h">DEBRIEF</div>');
     body.push('<div>' + esc(s.debrief) + '</div>');
+    if (s.sources && s.sources.length) {
+      body.push('<div class="debrief-h">PRIMARY REFERENCES</div>');
+      s.sources.forEach(function (source) {
+        if (!/^https:\/\//.test(source.url)) return;
+        var url = esc(source.url).replace(/"/g, '&quot;');
+        body.push('<div><a href="' + url + '" target="_blank" rel="noopener noreferrer">' + esc(source.title) + '</a></div>');
+      });
+    }
 
     document.getElementById('modal-title').textContent = o.title;
     document.getElementById('modal-title').className = o.win ? 'win' : 'lose';

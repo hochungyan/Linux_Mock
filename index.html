@@ -4,13 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SEV1 — Production Support Simulator</title>
-<meta name="description" content="Linux interview practice for investment bank and hedge fund production support: terminal drills, incident response and interview questions.">
+<meta name="description" content="Matrix-themed production support simulator for investment banks and hedge funds: Linux investigations, FIX incidents, terminal drills and interviews.">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div id="boot" class="boot">
   <div class="boot-inner">
+    <div class="matrix-kicker">SEV1 // OPERATIONS TRAINING NETWORK</div>
     <pre class="logo">
    ███████ ███████ ██    ██  ██
    ██      ██      ██    ██ ███
@@ -18,24 +19,35 @@
         ██ ██       ██  ██   ██
    ███████ ███████   ████    ██
     </pre>
-    <div class="tagline">PRODUCTION SUPPORT SIMULATOR &mdash; front-office incident response</div>
-    <div class="boot-sub">Linux interview preparation for investment bank and hedge fund support desks.</div>
+    <div class="tagline">PRODUCTION SUPPORT SIMULATOR &mdash; investment banks &amp; hedge funds</div>
+    <div class="boot-sub">Investigate trading, market data, positions, risk and post-trade incidents from a Linux terminal.</div>
+    <div class="matrix-status">SIMULATION ONLINE <span>LOCAL LAB / NO LIVE ORDERS</span></div>
     <div id="coverage-count" class="coverage-count"></div>
     <nav class="track-tabs" aria-label="Choose a training track">
-      <button id="tab-basics" class="track-tab selected" aria-pressed="true">Terminal drills</button>
-      <button id="tab-incidents" class="track-tab" aria-pressed="false">Incident investigations</button>
+      <button id="tab-incidents" class="track-tab selected" aria-pressed="true">Incident investigations</button>
+      <button id="tab-fix" class="track-tab" aria-pressed="false">FIX incidents</button>
+      <button id="tab-basics" class="track-tab" aria-pressed="false">Terminal drills</button>
       <button id="tab-interview" class="track-tab" aria-pressed="false">Interview practice</button>
     </nav>
 
-    <div id="track-basics" class="track">
+    <div id="track-basics" class="track hidden">
       <h2 class="track-h">BASICS<span>short drills &mdash; one question, one command, one answer</span></h2>
       <div id="drill-list" class="scenario-list"></div>
     </div>
 
-    <div id="track-incidents" class="track hidden">
-      <h2 class="track-h">INCIDENTS<span>full investigations &mdash; find the root cause, then fix it</span></h2>
+    <div id="track-incidents" class="track">
+      <h2 class="track-h">TRADING &amp; POST-TRADE INCIDENTS<span>investigate the evidence, recover the affected flow, verify the business result</span></h2>
+      <div id="incident-count" class="coverage-count"></div>
+      <p class="interview-intro">Original fictional cases based on public industry documentation. Diagnose with logs, process and network evidence, then check orders, positions or valuations before closing the incident. New case debriefs include their source references.</p>
       <div id="scenario-list" class="scenario-list"></div>
     </div>
+
+    <section id="track-fix" class="track hidden" aria-label="FIX incident investigations">
+      <h2 class="track-h">FIX SESSION &amp; DROP-COPY INCIDENTS<span>prove transport, session and business recovery separately</span></h2>
+      <div id="fix-count" class="coverage-count"></div>
+      <p class="interview-intro">Investigate sequence gaps, coordinated resets, TestRequest/Heartbeat exchanges, logon identity and missing drop-copy executions. Each case supplies exact evidence paths and a guarded recovery runbook. <code>fixctl</code> is a fictional lab console, not a standard FIX or venue command. Never reset a live session or resend orders without the approved counterparty procedure.</p>
+      <div id="fix-scenario-list" class="scenario-list"></div>
+    </section>
 
     <section id="track-interview" class="track hidden" aria-label="Interview practice">
       <h2 class="track-h">INTERVIEW PRACTICE<span>explain your reasoning, compare an answer, then rate your confidence</span></h2>
@@ -75,7 +87,7 @@
       <p id="interview-storage" class="interview-note">Confidence ratings stay in this browser. Scratch notes are cleared when you move to another question.</p>
     </section>
 
-    <div class="boot-foot">Start with a terminal drill, explain the topic in interview practice, then investigate a P1.</div>
+    <div class="boot-foot">Pick an incident to join the desk. Use terminal drills when you want to practise a diagnostic command.</div>
     <details class="scope-note"><summary>Coverage and simulator limits</summary><p>This is broad preparation, not a guarantee of every interview question. The terminal models a selected GNU/Linux command subset and simplified machine snapshots. Use <code>help</code> and <code>man command</code> inside a drill. Interview examples are real-system references and may use flags or tools outside the simulator. Distribution, kernel, JDK and counterparty behavior can vary. Production changes follow the firm’s runbooks, access rules and business controls.</p></details>
   </div>
 </div>
@@ -149,14 +161,29 @@
 <script src="js/commands/net.js"></script>
 <script src="js/commands/java.js"></script>
 <script src="js/commands/ops.js"></script>
+<script src="js/commands/fin.js"></script>
+<script src="js/commands/fix.js"></script>
 <script src="js/scenarios/disk-full-deleted-fd.js"></script>
 <script src="js/scenarios/market-data-frozen.js"></script>
 <script src="js/scenarios/jvm-memory-leak.js"></script>
 <script src="js/scenarios/cpu-spin-thread.js"></script>
 <script src="js/scenarios/fix-seqnum-gap.js"></script>
+<script src="js/scenarios/fix-operations-incidents.js"></script>
 <script src="js/scenarios/nfs-hang-eod.js"></script>
+<script src="js/scenarios/mq-poison-settlement.js"></script>
+<script src="js/scenarios/db-blocking-eod.js"></script>
+<script src="js/scenarios/clock-drift-rts25.js"></script>
+<script src="js/scenarios/algo-runaway-orders.js"></script>
+<script src="js/scenarios/kdb-rdb-memory.js"></script>
+<script src="js/scenarios/mifir-transaction-reporting.js"></script>
+<script src="js/scenarios/corporate-action-split.js"></script>
+<script src="js/scenarios/nostro-statement-missing.js"></script>
+<script src="js/scenarios/tls-cert-expiry-open.js"></script>
 <script src="js/scenarios/db-pool-transactions.js"></script>
 <script src="js/scenarios/infrastructure-support-incidents.js"></script>
+<script src="js/scenarios/market-risk-investigations.js"></script>
+<script src="js/scenarios/trade-reconciliation-incidents.js"></script>
+<script src="js/scenarios/distributed-platform-incidents.js"></script>
 <script src="js/drills/logs-basics.js"></script>
 <script src="js/drills/tcp-basics.js"></script>
 <script src="js/drills/udp-multicast-basics.js"></script>

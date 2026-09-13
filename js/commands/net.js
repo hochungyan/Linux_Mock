@@ -417,10 +417,18 @@
     var url = argv.filter(function (x) { return /^https?:\/\//.test(x); })[0];
     if (!url) return { err: 'curl: try \'curl --help\' for more information', code: 2 };
     var endpoints = ctx.world.http || {};
-    var key = Object.keys(endpoints).filter(function (k) { return url.indexOf(k) >= 0; })[0];
+    var target = url.replace(/^https?:\/\//, '');
+    var key = Object.keys(endpoints).filter(function (k) {
+      return ctx.world.httpExact ? target === k : url.indexOf(k) >= 0;
+    })[0];
     if (!key) return { err: 'curl: (7) Failed to connect: Connection refused', code: 7 };
     var v = endpoints[key];
-    return typeof v === 'function' ? v(ctx.world) : v;
+    var method = 'GET';
+    for (var i = 1; i < argv.length; i++) {
+      if (argv[i] === '-X' || argv[i] === '--request') method = (argv[++i] || '').toUpperCase();
+      else if (/^-X.+/.test(argv[i])) method = argv[i].slice(2).toUpperCase();
+    }
+    return typeof v === 'function' ? v(ctx.world, { url: url, method: method, argv: argv }) : v;
   }, { help: 'fetch an http endpoint' });
   sh.alias('wget', 'curl');
 

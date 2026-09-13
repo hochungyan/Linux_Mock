@@ -896,6 +896,10 @@
       case 'restart':
       case 'start':
       case 'stop':
+      // reload re-reads configuration and certificates without dropping the
+      // connections a restart would kill.
+      case 'reload':
+      case 'reload-or-restart':
         if (svc.requiresRoot !== false && world.user !== 'root') {
           return {
             err: 'Failed to ' + verb + ' ' + unit + '.service: Access denied\n' +

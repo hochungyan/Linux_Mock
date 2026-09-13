@@ -12,7 +12,7 @@ const ROOT = path.join(__dirname, '..');
 const ENGINE_FILES = [
   'js/vfs.js', 'js/world.js', 'js/shell.js',
   'js/commands/core.js', 'js/commands/sys.js', 'js/commands/net.js',
-  'js/commands/java.js', 'js/commands/ops.js'
+  'js/commands/java.js', 'js/commands/ops.js', 'js/commands/fin.js', 'js/commands/fix.js'
 ];
 
 function scenarioFiles() {
