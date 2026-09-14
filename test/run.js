@@ -12,6 +12,7 @@ const SUITES = [
   'business-operations.test.js',
   'fix-incidents.test.js',
   'distributed-platform.test.js',
+  'vocab.test.js',
   'shell-accuracy.test.js',
   'system-accuracy.test.js',
   'browser.test.js'

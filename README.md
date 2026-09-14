@@ -2,7 +2,7 @@
 
 Linux interview preparation for investment bank and hedge fund production support / application support.
 
-**186 practical questions in 14 packs, 160 interview questions across 22 topics, and 32 incident investigations (25 general + 7 FIX).** A black-and-green Matrix operations-console theme spans all four tracks.
+**186 practical questions in 14 packs, 160 interview questions across 22 topics, 32 incident investigations (25 general + 7 FIX), and 520 product/FIX vocabulary entries across 19 sections.** A black-and-green Matrix operations-console theme spans all five tracks.
 
 ## Run
 
@@ -12,12 +12,13 @@ Double-click `start.bat`, or run `node serve.js` and open [the local game](http:
 
 Render can deploy this repository as a Docker Web Service using the root `Dockerfile`. The server honors Render's injected `PORT`; no build command or application dependencies are required.
 
-## Four tracks
+## Five tracks
 
 - **Terminal drills:** inspect a simulated host and submit `answer <value>`. Use `task`, `task N`, `hint`, `solution`, `skip` and `finish`. Correct answers show a command and its interpretation. Some conceptual tasks use supplied reference notes.
 - **Incident investigations:** `objective` states the goal and the loop at any time; gather findings, use `diagnose`, then restore the machine through commands. Recovery quality affects the score.
 - **FIX incidents:** a dedicated tab beside Incident investigations. Investigate session gaps, bilateral sequence resets, heartbeat/TestRequest failures, drop-copy source mapping, consumer lag and Logon identity. Each new case has absolute evidence paths, a scoped approval, a runbook and separate session/business recovery checks.
 - **Interview practice:** search/filter by topic or confidence, explain your answer, reveal the guide and rate your confidence. Mock interviews select up to 20 distinct matching questions. These are self-assessments, not automatically graded exam scores. Ratings stay in this browser; scratch notes clear on changing questions.
+- **Product & FIX vocabulary:** a searchable reference sheet for FICC and equity-derivative support - what each instrument is, how its lifecycle breaks, and the FIX tags, message types and enumerations you are expected to recognise without looking them up. Every definition carries a "why production support cares" note, and each section ends with rapid-fire interview answers.
 
 The game opens on Incident investigations. Use drills to practise commands, then investigate a desk's business failure. The [finance research notes](docs/FINANCE-RESEARCH.md) connect the new cases to public primary sources and distinguish industry behavior from fictional controls.
 
@@ -42,7 +43,19 @@ The [FIX and platform research notes](docs/FIX-RESEARCH.md) link the workflows t
 | FIX sessions and order evidence | 18 | Tags, gaps, duplicate fills, quantities, recovery |
 | Services, batch, DNS and time | 16 | systemctl, journalctl, DNS, NTP, dependencies, reconciliation |
 
-The [coverage guide](docs/COVERAGE.md) lists all 22 interview topics, requested command examples and simulator boundaries.
+The [coverage guide](docs/COVERAGE.md) lists all 22 interview topics, the 19 vocabulary sections, requested command examples and simulator boundaries.
+
+## Product and FIX vocabulary
+
+| Group | Sections | What it covers |
+|---|---|---|
+| Market structure | Desk map, trade lifecycle | Sell/buy side, FICC vs equities, front to back office, order to settlement, SOD/EOD, cutoffs |
+| Equity | Cash equities and corporate actions, equity derivatives, options and Greeks | Splits, dividends, rights, borrow; TRS, CFD, variance and dividend swaps, autocallables; exercise, assignment, expiry, delta/gamma/vega/theta/rho |
+| Forwards and futures | Forwards, futures and the margin machinery | Side-by-side comparison, initial and variation margin, CCP novation, roll, first notice day, contango and backwardation, forward pricing |
+| FICC | Rates, credit, FX and money markets, commodities, collateral | Bonds, DV01, duration, IRS/OIS, RFR transition, CDS and index rolls, FX swaps and NDFs, CLS, repo, CSA and margin calls |
+| Control and platform | Valuation, PnL and risk; regulation and reporting; systems and data | Marks, PnL explain, VaR, MiFIR/RTS 25, EMIR, CAT, identifiers, OMS/EMS, feed handlers, kdb+, schedulers |
+| FIX | Framing and session layer, tags you must know cold, message types and enumerations, production symptoms, rapid-fire | tag=value and SOH, the seven admin messages, header/identity/state/instrument tags, OrdStatus vs ExecType, reject codes, worked raw messages, log-reading commands |
+
 
 ## Incidents
 
@@ -96,12 +109,12 @@ No finite bank covers every interview. Verify real-host syntax, distribution/JDK
 
 ## Verification
 
-`node test/run.js` runs eleven suites. `npm test` calls the same runner when npm is available. `npm run test:fix` runs the FIX-specific recovery and negative-path checks.
+`node test/run.js` runs twelve suites. `npm test` calls the same runner when npm is available. `npm run test:fix` runs the FIX-specific recovery and negative-path checks; `npm run test:vocab` checks the vocabulary reference.
 
-The suites cover scenario recovery, drill solution evidence, shell accuracy, system/network accuracy and browser wiring/interview interaction. The drill checks confirm answers appear in solution output; they cannot independently prove every explanation or possible command combination. Real-browser smoke checks cover rendering, search, command execution and answer progression.
+The suites cover scenario recovery, drill solution evidence, shell accuracy, system/network accuracy, vocabulary structure and FIX-tag coverage, and browser wiring/interview/vocabulary interaction. The drill checks confirm answers appear in solution output; they cannot independently prove every explanation or possible command combination. Real-browser smoke checks cover rendering, search, command execution and answer progression.
 
 ## Extending
 
-See [Adding scenarios](docs/ADDING-SCENARIOS.md). Add drill files under `js/drills/` and their script tags in `index.html`. Interview questions are in `js/interview-data.js`; screen counts are calculated from the data. Update the coverage guide and rerun checks after changes.
+See [Adding scenarios](docs/ADDING-SCENARIOS.md). Add drill files under `js/drills/` and their script tags in `index.html`. Interview questions are in `js/interview-data.js` and vocabulary entries in `js/vocab-data.js`; screen counts are calculated from the data. Update the coverage guide and rerun checks after changes.
 
 This remains a dependency-free game. The included Dockerfile runs the same server used locally and is suitable for a Render Web Service.

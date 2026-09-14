@@ -12,7 +12,8 @@
     "test:accuracy": "node test/shell-accuracy.test.js && node test/system-accuracy.test.js",
     "test:incidents": "node test/incidents.test.js",
     "test:fix": "node test/fix-incidents.test.js",
-    "test:platform": "node test/distributed-platform.test.js"
+    "test:platform": "node test/distributed-platform.test.js",
+    "test:vocab": "node test/vocab.test.js"
   },
   "keywords": [
     "linux",

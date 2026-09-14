@@ -1,6 +1,6 @@
 # Linux support interview coverage
 
-**186 terminal/evidence questions, 160 interview questions, 32 incidents: 25 general and 7 FIX.** The Matrix-themed game opens on trading and post-trade investigations, with FIX incidents in the adjacent tab. The interview track offers topic/search/confidence filters and mock interviews of up to 20 distinct matching questions.
+**186 terminal/evidence questions, 160 interview questions, 32 incidents (25 general and 7 FIX), and 520 vocabulary entries in 19 sections.** The Matrix-themed game opens on trading and post-trade investigations, with FIX incidents in the adjacent tab. The interview track offers topic/search/confidence filters and mock interviews of up to 20 distinct matching questions. The vocabulary track is a searchable product, market and FIX reference rather than an exercise.
 
 ## Finance investigations
 
@@ -61,16 +61,44 @@ Definitions: [Bash redirections](https://www.gnu.org/software/bash/manual/html_n
 
 Topic sources appear under answer guides: GNU, Linux command/kernel documentation, systemd, Oracle Java, chrony, OpenSSL, curl and FIX Trading Community specifications.
 
+## Product and FIX vocabulary syllabus
+
+The vocabulary track answers the other half of an application-support interview: the business the systems exist for. Every definition is paired with what it means when the thing fails, and each section closes with rapid-fire answers.
+
+| Section | Entries | Coverage |
+|---|---:|---|
+| The desk map | 20 | Sell/buy side, FICC, equities, Delta One, flow vs exotics, capacity, prime brokerage, asset-class-to-system map |
+| Trade lifecycle end to end | 22 | Order, execution, allocation, affirmation, clearing, settlement, custody, nostro, recon, T+1/T+2, SSI, SOD/EOD, cutoffs |
+| Cash equities and corporate actions | 20 | ADR/ETF, venues and auctions, short selling and borrow, dividends, splits, rights, mergers, ex/record/pay dates, claims |
+| Equity derivatives | 23 | Listed and OTC options, index and single-stock futures, TRS, CFD, swap resets, variance and dividend swaps, convertibles, autocallables, barriers, the five valuation inputs |
+| Forwards, futures and margin | 38 | Full forward/future comparison, notional, tick value, IM/VM, CCP novation, open interest, roll, FND, basis, cost of carry, contango, forward pricing relationships |
+| Options and Greeks | 23 | Call/put, exercise style, exercise vs assignment, physical vs cash settlement, moneyness, implied vol, skew, put-call parity, delta/gamma/vega/theta/rho and the input behind each |
+| Rates | 28 | Bond static, clean/dirty, accrued, duration, DV01, convexity, CTD; IRS, OIS, fixings, RFR transition, FRA, basis swaps, swaptions, curves, day counts, calendars |
+| Credit derivatives | 11 | CDS mechanics, running coupon and upfront, recovery, credit events, CDX/iTraxx, index rolls, succession |
+| FX and money markets | 22 | Spot and value dates, forward points, FX swaps, NDFs and fixings, cross-currency, FX options and cuts, CLS/PvP; repo, haircuts, GC vs special, securities lending |
+| Commodities | 9 | Physical vs financial settlement, benchmark grades, first notice day, warehouse receipts, loco and allocation, EFP, roll yield |
+| Collateral, margin and financing | 11 | CSA and ISDA master, thresholds, tri-party, margin disputes, SIMM, eligibility and haircuts, margin call files |
+| Valuation, PnL and risk | 26 | Marks and snap times, mark-to-model, IPV, XVA, realised vs unrealised, PnL explain, VaR, stress, limits, position keeping, plus a symptom-to-first-check table |
+| Regulation and reporting | 21 | MiFID II/MiFIR, RTS 25 and RTS 6, EMIR, SFTR, Dodd-Frank, CAT, APA/ARM, CSDR, surveillance; ISIN, CUSIP/SEDOL, LEI, UTI/UPI, MIC, CFI |
+| Systems, data and support surface | 24 | OMS/EMS/SOR, algo containers, FIX gateways, feed handlers, kdb+, trade capture, position keeper, risk engine, reference data, recon, SWIFT, message bus, schedulers |
+| FIX: framing and session layer | 37 | tag=value and SOH, session vs application layer, dictionaries, repeating groups, versions and FIXT, the seven administrative messages, gap handling, stores, worked logon/heartbeat/resend traces |
+| FIX: tags you must know cold | 65 | Header and trailer, order and execution identity, state and quantities, order instructions, instrument identity, venue/timing/post-trade |
+| FIX: message types and enumerations | 72 | Application MsgTypes, OrdStatus, ExecType, session/business/order/cancel reject codes, worked new-order, replace-chain and cancel-reject sequences |
+| FIX in production | 33 | Symptom-cause-evidence table, evidence discipline, QuickFIX/J configuration vocabulary, Linux commands for reading FIX logs with the SOH delimiter |
+| Rapid-fire interview answers | 15 | Product one-liners, support judgement, escalation and handover, and the crossover questions where Linux incidents meet product knowledge |
+
+Vocabulary sources link to FIX Trading Community, ISDA, CME/Eurex/LME, ESMA/FCA, DTCC, SWIFT, CLS, BIS and vendor documentation. Definitions are training summaries of general market practice; contract terms, venue rules and FIX dictionaries vary by counterparty and firm.
+
 ## Practice boundaries
 
 **Executable:** the 14 packs and 32 scenarios use the simulator's command subset against shared synthetic state. Some conceptual tasks ask learners to read supplied notes; they do not emulate full ACL enforcement, a TLS stack or a live FIX peer. FIX logs are abbreviated decoded extracts, not valid wire messages. Linux commands inspect and edit files; the Operational decisions panel separately models documented QuickFIX/J JMX operations and external coordination. Configuration changes take effect on the relevant service start, not simply when a file is edited.
 
-**Reference:** interview examples may use real Linux features outside the simulator, including full scripts, null-delimited find/xargs, advanced journal filters, TLS, cgroups, SSH/rsync and profiling. Examples are displayed, not run.
+**Reference:** the vocabulary track is documentation, not an exercise: nothing in it is executed or graded, and it states general market practice rather than any one venue or firm. Interview examples may use real Linux features outside the simulator, including full scripts, null-delimited find/xargs, advanced journal filters, TLS, cgroups, SSH/rsync and profiling. Examples are displayed, not run.
 
 **Limits:** no bank covers every firm's interview. Product-specific SQL/middleware administration, exchange rules and counterparty dictionaries need separate documentation and practical experience. Low-latency tuning is a diagnosis topic, not a universal prescription.
 
 ## Verification
 
-Run `node test/run.js` for eleven suites covering scenario recovery, drill evidence, shell behavior, system/network behavior and browser/interview transitions. Dedicated FIX and distributed-platform suites include negative-path and business-outcome tests. Assertions test implementation, not every explanatory fact.
+Run `node test/run.js` for twelve suites covering scenario recovery, drill evidence, shell behavior, system/network behavior, vocabulary structure and FIX-tag coverage, and browser/interview/vocabulary transitions. Dedicated FIX and distributed-platform suites include negative-path and business-outcome tests. Assertions test implementation, not every explanatory fact.
 
 The NFS recovery uses documented player commands: scheduler termination does not remove the D-state process. A fictional approved DBA fence prevents late original commits before DR starts. Tests no longer remove the process behind the player's back.

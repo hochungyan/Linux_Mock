@@ -3,13 +3,14 @@
   'use strict';
 
   var STORE_KEY = 'sev1.results.v1';
-  var tracks = ['basics', 'incidents', 'fix', 'interview'];
+  var tracks = ['basics', 'incidents', 'fix', 'interview', 'vocab'];
   var selectedTrack = 'incidents';
   var returnLabels = {
     basics: 'BACK TO TERMINAL DRILLS',
     incidents: 'BACK TO INCIDENT LIST',
     fix: 'BACK TO FIX INCIDENTS',
-    interview: 'BACK TO INTERVIEW PRACTICE'
+    interview: 'BACK TO INTERVIEW PRACTICE',
+    vocab: 'BACK TO VOCABULARY'
   };
 
   function selectTrack(id) {
@@ -120,7 +121,8 @@
     document.getElementById('coverage-count').textContent =
       (PS.drills || []).reduce(function (n, p) { return n + p.tasks.length; }, 0) + ' practical questions · ' +
       scenarios.length + ' incidents total (' + general.length + ' general · ' + fix.length + ' FIX) · ' +
-      (PS.interview ? PS.interview.questions.length : 0) + ' interview questions';
+      (PS.interview ? PS.interview.questions.length : 0) + ' interview questions · ' +
+      (PS.vocab ? PS.vocab.entryCount : 0) + ' vocabulary entries';
   };
 
   function esc(t) {
@@ -172,6 +174,7 @@
 
     PS.renderScenarioList();
     if (PS.interview) PS.interview.init();
+    if (PS.vocab) PS.vocab.init();
     tracks.forEach(function (id) {
       var tab = document.getElementById('tab-' + id);
       if (tab) tab.onclick = function () { selectTrack(id); };

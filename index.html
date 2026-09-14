@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SEV1 — Production Support Simulator</title>
-<meta name="description" content="Matrix-themed production support simulator for investment banks and hedge funds: Linux investigations, FIX incidents, terminal drills and interviews.">
+<meta name="description" content="Matrix-themed production support simulator for investment banks and hedge funds: Linux investigations, FIX incidents, terminal drills, interview practice and a product/FIX vocabulary reference.">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -28,6 +28,7 @@
       <button id="tab-fix" class="track-tab" aria-pressed="false">FIX incidents</button>
       <button id="tab-basics" class="track-tab" aria-pressed="false">Terminal drills</button>
       <button id="tab-interview" class="track-tab" aria-pressed="false">Interview practice</button>
+      <button id="tab-vocab" class="track-tab" aria-pressed="false">Product &amp; FIX vocabulary</button>
     </nav>
 
     <div id="track-basics" class="track hidden">
@@ -87,7 +88,22 @@
       <p id="interview-storage" class="interview-note">Confidence ratings stay in this browser. Scratch notes are cleared when you move to another question.</p>
     </section>
 
-    <div class="boot-foot">Pick an incident to join the desk. Use terminal drills when you want to practise a diagnostic command.</div>
+    <section id="track-vocab" class="track hidden" aria-label="Product and FIX vocabulary">
+      <h2 class="track-h">PRODUCTS, MARKETS &amp; FIX VOCABULARY<span>read the instrument, read the lifecycle, read the log</span></h2>
+      <div id="vocab-count" class="coverage-count"></div>
+      <p class="interview-intro">A reference sheet for application and production support on an investment bank or hedge fund desk: what each instrument is, how its lifecycle breaks, and the FIX tags and enumerations you are expected to recognise without looking them up. Every definition is paired with why it matters when something fails at 07:00. Search across everything, or jump to one section.</p>
+      <div class="vocab-controls">
+        <label>Search<input id="vocab-search" type="search" placeholder="vega, repo, contango, tag 150, ExecType, LeavesQty…"></label>
+        <label>Section<select id="vocab-section-filter"><option value="">All sections</option></select></label>
+        <button id="vocab-clear" class="btn">Clear filters</button>
+      </div>
+      <nav id="vocab-jump" class="vocab-jump" aria-label="Jump to a section"></nav>
+      <p id="vocab-status" class="interview-progress" aria-live="polite"></p>
+      <div id="vocab-body" class="vocab-body"></div>
+      <p class="interview-note">Definitions are training summaries of general market practice. Contract terms, venue rules, FIX dictionaries and firm conventions vary - confirm against the counterparty specification and your firm's documentation before acting on any of it in production.</p>
+    </section>
+
+    <div class="boot-foot">Pick an incident to join the desk. Use terminal drills when you want to practise a diagnostic command, and the vocabulary reference when you need the product or the FIX tag behind it.</div>
     <details class="scope-note"><summary>Coverage and simulator limits</summary><p>This is broad preparation, not a guarantee of every interview question. The terminal models a selected GNU/Linux command subset and simplified machine snapshots. Use <code>help</code> and <code>man command</code> inside a drill. Interview examples are real-system references and may use flags or tools outside the simulator. Distribution, kernel, JDK and counterparty behavior can vary. Production changes follow the firm’s runbooks, access rules and business controls.</p></details>
   </div>
 </div>
@@ -209,6 +225,8 @@
 <script src="js/drills/service-batch-time.js"></script>
 <script src="js/interview-data.js"></script>
 <script src="js/interview.js"></script>
+<script src="js/vocab-data.js"></script>
+<script src="js/vocab.js"></script>
 <script src="js/terminal.js"></script>
 <script src="js/game.js"></script>
 <script src="js/drill.js"></script>

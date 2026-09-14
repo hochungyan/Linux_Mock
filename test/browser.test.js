@@ -134,11 +134,11 @@ const fixScenarios = PS.scenarios.filter(s => s.track === 'fix');
 check('scenario list rendered', els['scenario-list'].children.length === generalScenarios.length,
   els['scenario-list'].children.length);
 
-console.log('\n=== four training tracks: separation and counts ===');
-const tracks = ['basics', 'incidents', 'fix', 'interview'];
+console.log('\n=== five training tracks: separation and counts ===');
+const tracks = ['basics', 'incidents', 'fix', 'interview', 'vocab'];
 const trackNav = /<nav\b[^>]*class="track-tabs"[^>]*>([\s\S]*?)<\/nav>/.exec(html);
 const navTracks = trackNav ? Array.from(trackNav[1].matchAll(/\bid="tab-([^"]+)"/g), m => m[1]) : [];
-check('all four tabs share one navigation, with incidents and FIX adjacent',
+check('all five tabs share one navigation, with incidents and FIX adjacent',
   navTracks.slice().sort().join(',') === tracks.slice().sort().join(',') &&
   Math.abs(navTracks.indexOf('incidents') - navTracks.indexOf('fix')) === 1);
 function selectedTrack(id) {
@@ -157,7 +157,8 @@ function checkCounts(label) {
   const practical = PS.drills.reduce((n, p) => n + p.tasks.length, 0);
   check(label + ': exact overall count and subtotals', els['coverage-count'].textContent ===
     practical + ' practical questions · ' + PS.scenarios.length + ' incidents total (' +
-    general + ' general · ' + fix + ' FIX) · ' + PS.interview.questions.length + ' interview questions');
+    general + ' general · ' + fix + ' FIX) · ' + PS.interview.questions.length + ' interview questions · ' +
+    PS.vocab.entryCount + ' vocabulary entries', els['coverage-count'].textContent);
   check(label + ': section counts match each list', els['incident-count'] && els['fix-count'] &&
     els['incident-count'].textContent === general + ' incidents' &&
     els['fix-count'].textContent === fix + ' FIX incidents');
@@ -175,6 +176,7 @@ for (const id of tracks) {
   if (els['tab-' + id]) els['tab-' + id].onclick();
   check(id + ' tab selects only its own panel and button', selectedTrack(id));
 }
+els['tab-interview'].onclick();
 PS.renderScenarioList();
 check('rendering cards preserves interview tab selection', selectedTrack('interview'));
 
@@ -464,6 +466,47 @@ check('mock draws 20 distinct questions', seen.size === 20);
 check('mock summary distinguishes rated and skipped', /19 of 20/.test(els['interview-empty'].textContent) && /1 unrated/.test(els['interview-empty'].textContent));
 els['interview-study'].onclick();
 check('study can restart after mock', !els['interview-card'].classList.contains('hidden'));
+
+console.log('\n=== product and FIX vocabulary reference ===');
+els['tab-vocab'].onclick();
+check('vocabulary tab opens only its own panel', selectedTrack('vocab'));
+check('every section rendered once', els['vocab-body'].children.length === PS.vocabSections.length &&
+  new Set(els['vocab-body'].children.map(c => c.getAttribute('data-id'))).size === PS.vocabSections.length);
+check('jump links cover every section', els['vocab-jump'].children.length === PS.vocabSections.length);
+check('section filter gains an option per section',
+  els['vocab-section-filter'].children.length === PS.vocabSections.length);
+check('entry count shown on the track', els['vocab-count'].textContent ===
+  PS.vocabEntryCount + ' vocabulary entries across ' + PS.vocabSections.length + ' sections',
+  els['vocab-count'].textContent);
+check('everything visible before filtering', PS.vocab.shownCount() === PS.vocabEntryCount,
+  PS.vocab.shownCount());
+check('status line reports the full set', els['vocab-status'].textContent ===
+  PS.vocabEntryCount + ' entries shown across ' + PS.vocabSections.length + ' sections of ' +
+  PS.vocabEntryCount + ' total.', els['vocab-status'].textContent);
+
+els['vocab-search'].value = 'LeavesQty'; els['vocab-search'].oninput();
+const fixHits = PS.vocab.shownCount();
+check('search narrows to matching entries', fixHits > 0 && fixHits < PS.vocabEntryCount, fixHits);
+check('search hides sections with no match',
+  els['vocab-body'].children.some(c => c.classList.contains('hidden')));
+els['vocab-search'].value = 'no-such-term-zzz'; els['vocab-search'].oninput();
+check('empty search reports no matches', PS.vocab.shownCount() === 0 &&
+  /No entries match/.test(els['vocab-status'].textContent));
+els['vocab-clear'].onclick();
+check('clearing filters restores every entry', PS.vocab.shownCount() === PS.vocabEntryCount &&
+  els['vocab-search'].value === '');
+
+els['vocab-section-filter'].value = 'fixtags'; els['vocab-section-filter'].onchange();
+const tagSection = PS.vocabSections.find(s => s.id === 'fixtags');
+const tagRows = tagSection.blocks.reduce((n, b) => n + b.rows.length, 0);
+check('section filter shows exactly one section', PS.vocab.shownCount() === tagRows,
+  PS.vocab.shownCount() + ' vs ' + tagRows);
+PS.vocab.jumpTo('fixmsgs');
+check('jumping to a section clears the section filter', els['vocab-section-filter'].value === '' &&
+  PS.vocab.shownCount() === PS.vocabEntryCount);
+PS.vocab.init();
+check('init is idempotent', els['vocab-body'].children.length === PS.vocabSections.length);
+
 els['tab-basics'].onclick();
 check('terminal drill navigation remains available', !els['track-basics'].classList.contains('hidden'));
 
