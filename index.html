@@ -45,7 +45,7 @@
     <section id="track-fix" class="track hidden" aria-label="FIX incident investigations">
       <h2 class="track-h">FIX SESSION &amp; DROP-COPY INCIDENTS<span>prove transport, session and business recovery separately</span></h2>
       <div id="fix-count" class="coverage-count"></div>
-      <p class="interview-intro">Investigate sequence gaps, coordinated resets, TestRequest/Heartbeat exchanges, logon identity and missing drop-copy executions. Each case supplies exact evidence paths and a guarded recovery runbook. <code>fixctl</code> is a fictional lab console, not a standard FIX or venue command. Never reset a live session or resend orders without the approved counterparty procedure.</p>
+      <p class="interview-intro">Investigate with Linux commands, edit QuickFIX/J configuration, and verify session and trade recovery. Use Operational decisions for documented engine-console actions and counterparty coordination. Each case includes exact evidence paths and an interview explanation.</p>
       <div id="fix-scenario-list" class="scenario-list"></div>
     </section>
 
@@ -120,6 +120,15 @@
     </section>
 
     <aside class="side">
+      <section id="support-panel" class="panel hidden" aria-label="Operational decisions">
+        <h2>Operational decisions</h2>
+        <p id="support-note" class="panel-note">These selections model engine-console actions and incident-bridge responses. Use the terminal for Linux commands and configuration edits.</p>
+        <label for="support-choice">Next operational action</label>
+        <select id="support-choice"></select>
+        <p id="support-detail" class="panel-note"></p>
+        <button id="support-apply" class="btn wide">TAKE SELECTED ACTION</button>
+        <p id="support-result" class="panel-note" role="status" aria-live="polite"></p>
+      </section>
       <div class="panel">
         <h2 id="brief-title">Pager</h2>
         <div id="brief" class="brief"></div>
@@ -162,13 +171,13 @@
 <script src="js/commands/java.js"></script>
 <script src="js/commands/ops.js"></script>
 <script src="js/commands/fin.js"></script>
-<script src="js/commands/fix.js"></script>
+<script src="js/fix-training.js"></script>
 <script src="js/scenarios/disk-full-deleted-fd.js"></script>
 <script src="js/scenarios/market-data-frozen.js"></script>
 <script src="js/scenarios/jvm-memory-leak.js"></script>
 <script src="js/scenarios/cpu-spin-thread.js"></script>
-<script src="js/scenarios/fix-seqnum-gap.js"></script>
 <script src="js/scenarios/fix-operations-incidents.js"></script>
+<script src="js/scenarios/fix-seqnum-gap.js"></script>
 <script src="js/scenarios/nfs-hang-eod.js"></script>
 <script src="js/scenarios/mq-poison-settlement.js"></script>
 <script src="js/scenarios/db-blocking-eod.js"></script>

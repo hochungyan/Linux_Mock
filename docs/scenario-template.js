@@ -23,6 +23,12 @@
     impactPerMin: 25000,
     currency: 'GBP',                         // GBP or USD
 
+    // Optional. One or two sentences naming the GOAL, shown in the login banner
+    // and by the `objective` verb. It must not give the cause away - fix.prompt
+    // is deliberately not reused here, because recovery instructions usually do.
+    // Omit it and players get a generic 'prove it, then recover' line.
+    objective: 'What good looks like, plus the constraint that rules out the blunt fix.',
+
     brief:
       'PAGER 09:14 - from whoever raised it\n\n' +
       '"What they said, in their words. Include the detail that is wrong or\n' +

@@ -6,11 +6,9 @@
 
 The added cases cover execution replay and position reconciliation, allocation/standing-settlement-instruction exceptions, futures book recovery after A/B loss, and stale FX valuation inputs. Each requires evidence gathering, scoped recovery and business verification; a running process or successful job is insufficient. Primary sources and simulation boundaries are recorded in [Finance research](FINANCE-RESEARCH.md) and linked in new case debriefs.
 
-## Requested command examples
-
 ## FIX and platform investigations
 
-The dedicated FIX tab covers inbound ResendRequest recovery, administrative gap fills versus full resets, explicitly agreed resets to 1, TestRequest/Heartbeat ID correlation, source-session mapping and drop-copy completeness, downstream inbox/application checkpoint lag, and CompID/environment Logon rejection. Six new cases require preservation, scoped approval, repair and post-resume verification; the original flapping case retains its saved ID. See [FIX research and simulation boundaries](FIX-RESEARCH.md).
+The dedicated FIX tab covers inbound ResendRequest recovery, administrative gap fills versus full resets, explicitly agreed resets to 1, TestRequest/Heartbeat ID correlation, source-session mapping and drop-copy completeness, downstream inbox/application checkpoint lag, and CompID/environment Logon rejection. All seven cases require preservation, scoped approval, repair and post-resume verification; the original flapping case retains its saved ID. Configuration exercises distinguish disk edits from loaded settings and session counters. See [FIX research and simulation boundaries](FIX-RESEARCH.md).
 
 General coverage also includes Kafka poison records and offset recovery, retry storms with idempotency, and deployment startup/readiness/liveness failures. The finance cases include MQ, DB locks, clock synchronization, throttling, kdb+, reporting, corporate actions, cash statements and TLS alongside trading and valuation recovery.
 
@@ -65,7 +63,7 @@ Topic sources appear under answer guides: GNU, Linux command/kernel documentatio
 
 ## Practice boundaries
 
-**Executable:** the 14 packs and 32 scenarios use the simulator's command subset against shared synthetic state. Some conceptual tasks ask learners to read supplied notes; they do not emulate full ACL enforcement, a TLS stack or a live FIX peer. FIX logs are abbreviated decoded extracts, not valid wire messages. The new `fixctl` command models a fictional approved support workflow; it is not a universal reset utility.
+**Executable:** the 14 packs and 32 scenarios use the simulator's command subset against shared synthetic state. Some conceptual tasks ask learners to read supplied notes; they do not emulate full ACL enforcement, a TLS stack or a live FIX peer. FIX logs are abbreviated decoded extracts, not valid wire messages. Linux commands inspect and edit files; the Operational decisions panel separately models documented QuickFIX/J JMX operations and external coordination. Configuration changes take effect on the relevant service start, not simply when a file is edited.
 
 **Reference:** interview examples may use real Linux features outside the simulator, including full scripts, null-delimited find/xargs, advanced journal filters, TLS, cgroups, SSH/rsync and profiling. Examples are displayed, not run.
 

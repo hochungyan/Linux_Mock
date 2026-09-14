@@ -12,7 +12,7 @@ const ROOT = path.join(__dirname, '..');
 const ENGINE_FILES = [
   'js/vfs.js', 'js/world.js', 'js/shell.js',
   'js/commands/core.js', 'js/commands/sys.js', 'js/commands/net.js',
-  'js/commands/java.js', 'js/commands/ops.js', 'js/commands/fin.js', 'js/commands/fix.js'
+  'js/commands/java.js', 'js/commands/ops.js', 'js/commands/fin.js', 'js/fix-training.js'
 ];
 
 function scenarioFiles() {
@@ -64,6 +64,7 @@ function makeSession(scenario) {
     run(line) {
       const r = PS.shell.run(line, ctx);
       const plain = W.stripColor((r.out || '') + '\n' + (r.err || ''));
+      if (scenario.onEvidence) scenario.onEvidence({ cmd: line, out: plain, code: r.code, world });
       if (/\b(jstack|jcmd)\b/.test(line) && /Full thread dump/.test(plain)) world.flags.dumpTaken = true;
       if (/\bkill\s+-(3|SIGQUIT)\b/.test(line)) world.flags.dumpTaken = true;
       if (/\bjmap\b/.test(line) && /-dump/.test(line) && /Heap dump file created/.test(plain)) world.flags.heapDumped = true;

@@ -58,6 +58,7 @@
     this.term.clear();
     this.term.history = [];
     this.banner();
+    this.renderSupportActions();
     this.term.refreshPrompt();
     this.term.focus();
 
@@ -75,6 +76,68 @@
     };
   };
 
+  // The goal, stated without giving the cause away. A scenario supplies its own
+  // line only when the desk would phrase it more concretely than this; fix.prompt
+  // is NOT usable here - several of them name the root cause outright, so it
+  // stays behind a correct diagnosis.
+  var DEFAULT_OBJECTIVE =
+    'Prove what is actually wrong from evidence on this host, then recover the service.';
+
+  // Objectives are a sentence or two, so they need a hanging indent rather than
+  // the terminal's column-0 soft wrap.
+  function wrapText(text, width, indent) {
+    var words = String(text).split(' ').filter(function (w) { return w.length; });
+    var lines = [], line = '';
+    words.forEach(function (w) {
+      if (!line) { line = w; }
+      else if ((line + ' ' + w).length > width) { lines.push(line); line = w; }
+      else { line += ' ' + w; }
+    });
+    if (line) lines.push(line);
+    return lines.map(function (l, i) { return i ? indent + l : l; });
+  }
+
+  Game.prototype.objectiveText = function () {
+    var s = this.scenario;
+    var required = s.discoveries.filter(function (d) { return !d.optional; });
+    var self = this;
+    var got = required.filter(function (d) { return self.found.indexOf(d.id) >= 0; }).length;
+
+    var out = [
+      W.bold('OBJECTIVE'),
+      '  ' + wrapText(s.objective || DEFAULT_OBJECTIVE, 92, '').join('\n  '),
+      '',
+      W.bold('HOW THIS INCIDENT IS RUN'),
+      W.dim('  1. investigate  ') + 'explore the host with ordinary commands; evidence you turn up',
+      W.dim('                  registers as a finding (') + W.green('findings') + W.dim(' lists them, ') +
+        W.green('brief') + W.dim(' rereads the page)'),
+      W.dim('  2. ') + W.green('diagnose') + W.dim('     ') + 'lists the candidate root causes; ' +
+        W.green('diagnose <n>') + W.dim(' commits to one'),
+      W.dim('  3. fix          ') + 'the objective for recovery is spelled out once the cause is right;',
+      W.dim(s.supportActions ? '                  use Linux for configuration and Operational decisions for engine/peer actions;' : '                  you then repair it with real commands - the incident closes itself'),
+      W.dim(s.supportActions ? '                  verify fresh activity before closure. There is no terminal ' : '                  the moment the host is genuinely healthy. There is no ') +
+        W.green('finish') + W.dim('.'),
+      ''
+    ];
+
+    if (this.finished) {
+      out.push(W.dim('This incident is over.'));
+      return out.join('\n');
+    }
+    if (!this.diagnosed) {
+      out.push(W.dim('Where you are: ') + W.white('investigating') + W.dim('  -  ') +
+        got + '/' + required.length + W.dim(' findings established. Type ') +
+        W.green('diagnose') + W.dim(' when you can name the cause; ') +
+        W.green('hint') + W.dim(' costs points.'));
+      return out.join('\n');
+    }
+    out.push(W.dim('Where you are: ') + W.white('cause accepted') + W.dim(' - now put it right.'));
+    if (this.scenario.fix && !this.scenario.fix.check(this.world)) {
+      out.push(W.dim('  ') + this.scenario.fix.prompt);
+    }
+    return out.join('\n');
+  };
+
   Game.prototype.banner = function () {
     var s = this.scenario, w = this.world;
     this.term.write(W.dim('Last login: ' + W.dateStr(W.offset(w.clock, -86400)) + ' from 10.14.22.71'));
@@ -83,9 +146,15 @@
     this.term.write(W.dim('You are ') + W.white(w.user) + W.dim(' on ') + W.white(w.host) +
       W.dim('.  ' + s.desk));
     this.term.write('');
-    this.term.write(W.dim('The pager text is in the panel on the right. Type ') + W.green('brief') +
-      W.dim(' to reread it,'));
-    this.term.write(W.dim('') + W.green('help') + W.dim(' for the commands on this host, ') +
+    var self = this;
+    wrapText(s.objective || DEFAULT_OBJECTIVE, 88, '           ').forEach(function (l, i) {
+      self.term.write(i ? l : W.bold('OBJECTIVE  ') + l);
+    });
+    this.term.write(W.dim('Work it: ') + W.green('investigate') + W.dim(' -> ') + W.green('findings') +
+      W.dim(' -> ') + W.green('diagnose') + W.dim(s.supportActions ? ' -> Linux changes + Operational decisions.' : ' -> fix it with real commands.'));
+    this.term.write(W.dim('The pager text is in the panel on the right. ') + W.green('objective') +
+      W.dim(' explains how this is run, ') + W.green('brief') + W.dim(' rereads the page,'));
+    this.term.write(W.green('help') + W.dim(' for the commands on this host, ') +
       W.green('hint') + W.dim(' if you get stuck.'));
     this.term.write('');
   };
@@ -93,6 +162,37 @@
   Game.prototype.renderBrief = function () {
     var el = document.getElementById('brief');
     el.textContent = this.scenario.brief;
+  };
+
+  Game.prototype.renderSupportActions = function () {
+    var panel = document.getElementById('support-panel');
+    if (!panel) return;
+    var actions = this.scenario.supportActions || [];
+    panel.classList.toggle('hidden', !actions.length);
+    if (!actions.length) return;
+    var self = this, choice = document.getElementById('support-choice');
+    choice.innerHTML = '';
+    actions.forEach(function (a) { var option = document.createElement('option'); option.value = a.id; option.textContent = a.label; choice.appendChild(option); });
+    choice.value = actions[0].id;
+    choice.onchange = function () { var selected = actions.filter(function (a) { return a.id === choice.value; })[0]; document.getElementById('support-detail').textContent = selected ? selected.detail : ''; };
+    choice.onchange();
+    document.getElementById('support-result').textContent = 'Investigate and submit diagnose <n> before taking an operational action.';
+    document.getElementById('support-apply').onclick = function () { self.performSupportAction(choice.value); };
+  };
+
+  Game.prototype.performSupportAction = function (id) {
+    if (this.finished || !this.scenario.supportAction) return { err: 'No active operational decision.', code: 1 };
+    var action = this.scenario.supportActions.filter(function (a) { return a.id === id; })[0];
+    var result = !this.diagnosed ? { err: 'Establish the cause with diagnose <n> before taking this action.', code: 1 } : this.scenario.supportAction(this.world, id);
+    if (typeof result === 'string') result = { out: result, code: 0 };
+    var message = result.out || result.err || '';
+    this.term.write('');
+    this.term.write(W.bold('OPERATIONS: ') + (action ? action.label : id));
+    this.term.write(message, result.code ? 'err' : undefined);
+    document.getElementById('support-result').textContent = message;
+    this.history.push('[Operational decision] ' + id);
+    this.updateHud(); this.checkFix();
+    return result;
   };
 
   Game.prototype.renderFindings = function () {
@@ -203,6 +303,7 @@
 
   Game.prototype.checkDiscoveries = function (cmd, out, code) {
     var self = this;
+    if (this.scenario.onEvidence) this.scenario.onEvidence({ cmd: cmd, out: out, code: code, world: this.world });
     var info = { cmd: cmd, out: out, code: code, world: this.world };
     this.scenario.discoveries.forEach(function (d) {
       if (self.found.indexOf(d.id) >= 0) return;

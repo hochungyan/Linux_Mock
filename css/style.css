@@ -24,6 +24,10 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 .hidden{display:none !important}
+.side #support-choice{font:inherit;color:var(--fg);background:var(--bg2);border:1px solid var(--line);width:100%;margin:8px 0;padding:8px;min-width:0}
+#support-panel label{font-size:12px;color:var(--green)}
+#support-panel{flex-shrink:0}
+#support-result{white-space:pre-wrap;overflow-wrap:anywhere}
 kbd{background:#12251a;border:1px solid var(--line);border-radius:3px;padding:0 4px;font-size:11px;color:var(--fg)}
 code{color:var(--cyan)}
 a{color:var(--cyan);text-underline-offset:3px}

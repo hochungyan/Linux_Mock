@@ -190,10 +190,16 @@ if (legacyCard) {
   check('FIX card starts the incident runner with FIX return destination', PS.active === PS.game &&
     PS.game.scenario === legacyFix && selectedTrack('fix') &&
     els['modal-close'].textContent === 'BACK TO FIX INCIDENTS');
-  PS.game.run('curl http://localhost:9980/admin/session/GSCLIENT1/status');
-  check('FIX terminal diagnostics run', els.out.children.some(c => /REJECTED_SEQNUM_TOO_LOW/.test(c.innerHTML)));
+  PS.game.run('cat /var/log/quickfixj/messages.log');
+  check('FIX terminal diagnostics run', els.out.children.some(c => /MsgSeqNum too low/.test(c.innerHTML)));
+  check('FIX operational panel is visible', !els['support-panel'].classList.contains('hidden'));
+  els['support-choice'].value = 'jmx-reset'; els['support-apply'].onclick();
+  check('panel cannot mutate before diagnosis', PS.game.world.fixOps.resetCount === 0 && /diagnose/.test(els['support-result'].textContent));
   PS.game.submitDiagnosis(legacyFix.rootCauses.findIndex(c => c.correct));
-  PS.game.run('curl http://localhost:9980/admin/session/GSCLIENT1/reset');
+  legacyFix.walkthrough.forEach(function (step) {
+    if (typeof step === 'string') PS.game.run(step);
+    else { els['support-choice'].value = step.action; els['support-choice'].onchange(); els['support-apply'].onclick(); }
+  });
   check('FIX recovery finishes and opens debrief', PS.game.finished && !els.modal.classList.contains('hidden'));
   check('lower score keeps the legacy best and completion time', PS.loadResults()['fix-seqnum-gap'].score === 9876 &&
     PS.loadResults()['fix-seqnum-gap'].seconds === 42);
@@ -233,6 +239,7 @@ try { PS.startScenario(flagship); }
 catch (e) { check('startScenario', false, e.stack); }
 
 check('game panel unhidden', !els.game.classList.contains('hidden'));
+check('operational panel is hidden on ordinary incidents', els['support-panel'].classList.contains('hidden'));
 check('general incident start restores general return destination', selectedTrack('incidents') &&
   els['modal-close'].textContent === 'BACK TO INCIDENT LIST');
 check('boot panel hidden', els.boot.classList.contains('hidden'));
@@ -242,8 +249,35 @@ check('findings list rendered', els.findings.children.length === flagship.discov
   els.findings.children.length);
 check('banner written to terminal', els.out.children.length > 3, els.out.children.length);
 
+// The banner must state the goal and the loop: an incident that only says
+// "here is a pager" leaves players hunting for a verb that does not exist.
+const bannerText = els.out.children.map(c => c.innerHTML).join(' ');
+check('banner states an objective', /OBJECTIVE/.test(bannerText));
+check('banner names the loop', /investigate/.test(bannerText) && /diagnose/.test(bannerText));
+check('banner offers the objective verb', /objective/.test(bannerText));
+check('scenario without its own objective falls back to the default',
+  !flagship.objective && /Prove what is actually wrong/.test(bannerText));
+
 const g = PS.game;
 function play(line) { g.term.echo(line); g.run(line); }
+
+// Incident mode must not advertise drill verbs, and must answer "what do I do?"
+play('help');
+const incidentHelp = els.out.children.map(c => c.innerHTML).join(' ');
+check('incident help lists the objective verb', /objective/.test(incidentHelp));
+check('incident help hides drill-only verbs',
+  !/Drill/.test(incidentHelp) && !/answer &lt;value&gt;/.test(incidentHelp));
+play('task');
+check('task rejection points at objective in an incident',
+  els.out.children.some(c => /only available in a Basics drill/.test(c.innerHTML) &&
+    /type objective/.test(c.innerHTML)));
+play('objective');
+const objText = els.out.children.map(c => c.innerHTML).join(' ');
+check('objective restates the goal and the loop',
+  /OBJECTIVE/.test(objText) && /HOW THIS INCIDENT IS RUN/.test(objText));
+check('objective reports the current stage', /investigating/.test(objText));
+check('objective withholds the recovery prompt before diagnosis',
+  !objText.includes(flagship.fix.prompt));
 
 play('ss -uanp');
 check('finding awarded from ss', g.found.includes('recvq-full'), g.found.join(','));
@@ -260,6 +294,10 @@ const wrong = g.submitDiagnosis(0);
 check('wrong diagnosis penalised', g.wrongDiagnoses === 1 && /does not hold up/.test(wrong));
 const right = g.submitDiagnosis(2);
 check('right diagnosis accepted', g.diagnosed === true && /ACCEPTED/.test(right));
+
+play('objective');
+check('objective releases the recovery prompt once the cause is right',
+  els.out.children.slice(-6).map(c => c.innerHTML).join(' ').includes('Get prices flowing again'));
 
 play('curl http://localhost:9911/admin/refdata/failover');
 check('incident finished on fix', g.finished === true);
@@ -296,6 +334,14 @@ check('first task shown in terminal',
 // a real command still works inside a drill
 d.run('ss -tlnp');
 check('shell works in drill mode', els.out.children.some(c => /9310/.test(c.innerHTML)));
+
+d.run('help');
+const drillHelp = els.out.children.map(c => c.innerHTML).join(' ');
+check('drill help lists drill verbs', /Drill/.test(drillHelp) && /answer/.test(drillHelp));
+check('drill help hides incident-only verbs', !/diagnose/.test(drillHelp));
+d.run('objective');
+check('objective shows the current task inside a drill',
+  els.out.children.slice(-4).some(c => /TASK/.test(c.innerHTML)));
 
 // wrong answer, then right answer
 d.run('answer 9999');
@@ -368,7 +414,8 @@ for (const scenario of financeCases) {
   PS.startScenario(scenario);
   PS.game.submitDiagnosis(scenario.rootCauses.findIndex(c => c.correct));
   scenario.walkthrough.forEach((command, index) => {
-    PS.game.run(command);
+    if (typeof command === 'string') PS.game.run(command);
+    else PS.game.performSupportAction(command.action);
     if (index < scenario.walkthrough.length - 1) check(scenario.id + ' remains open before final release ' + index, !PS.game.finished);
   });
   check(scenario.id + ' completes with business recovery', PS.game.finished && scenario.fix.check(PS.game.world));

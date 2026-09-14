@@ -20,22 +20,36 @@
     ['Network', ['netstat', 'ss', 'ip', 'ifconfig', 'ping', 'telnet', 'nc', 'tcpdump', 'ntpq']],
     ['Java / app', ['jps', 'jstack', 'jmap', 'jstat', 'jcmd', 'jinfo']],
     ['System', ['systemctl', 'journalctl', 'dmesg', 'uname', 'lscpu', 'ulimit', 'sysctl']],
-    ['Batch', ['autorep', 'sendevent']],
-    ['Incident', ['brief', 'findings', 'diagnose', 'hint', 'escalate', 'help', 'man']],
-    ['Drill', ['task', 'answer', 'tasks', 'hint', 'solution', 'skip', 'finish']]
+    ['Batch', ['autorep', 'sendevent']]
   ];
+
+  // Only ever advertise the verbs that work where the player actually is.
+  // Listing the drill verbs during an incident sends people to `task`, which
+  // can only reject them.
+  var INCIDENT_GROUP = ['Incident', ['objective', 'brief', 'findings', 'diagnose', 'hint', 'escalate', 'help', 'man']];
+  var DRILL_GROUP = ['Drill', ['task', 'tasks', 'answer', 'hint', 'solution', 'skip', 'finish', 'help', 'man']];
+
+  function groupsFor(ctx) {
+    return GROUPS.concat([ctx && ctx.drill ? DRILL_GROUP : INCIDENT_GROUP]);
+  }
 
   reg('help', function (argv, io, ctx) {
     if (argv[1]) return sh.cmds.man(['man', argv[1]], io, ctx);
     var out = [W.bold('Commands available on this host') + W.dim('  (help <cmd> for detail)'), ''];
-    GROUPS.forEach(function (g) {
+    groupsFor(ctx).forEach(function (g) {
       out.push('  ' + W.amber(W.rpad(g[0], 15)) + g[1].join(' '));
     });
     out.push('');
     out.push(W.dim('  Supported subset: pipes, redirects, globs, $VARS, && and ||. Tab completes. Up recalls.'));
     out.push(W.dim('  This is a simulation. man <command> describes its available subset.'));
     out.push(W.dim('  Interview practice includes additional real GNU/Linux examples and support questions.'));
-    out.push(W.dim('  When you know the cause: ') + W.green('diagnose') + W.dim('   Stuck? ') + W.green('hint'));
+    if (ctx && ctx.drill) {
+      out.push(W.dim('  Current question: ') + W.green('task') + W.dim('   Submit: ') +
+        W.green('answer <value>') + W.dim('   Stuck? ') + W.green('hint'));
+    } else {
+      out.push(W.dim('  What am I meant to do? ') + W.green('objective') +
+        W.dim('   When you know the cause: ') + W.green('diagnose') + W.dim('   Stuck? ') + W.green('hint'));
+    }
     return out.join('\n');
   }, { help: 'list commands' });
 
@@ -175,7 +189,7 @@
 
   reg('task', function (argv, io, ctx) {
     var d = ctx.drill;
-    if (!d) return { err: 'task: only available in a Basics drill', code: 1 };
+    if (!d) return { err: 'task: only available in a Basics drill. You are on an incident - type objective.', code: 1 };
     if (argv[1]) {
       var n = parseInt(argv[1], 10) - 1;
       if (isNaN(n) || !d.pack.tasks[n]) return { err: 'task: no task ' + argv[1], code: 1 };
@@ -189,20 +203,20 @@
 
   reg('answer', function (argv, io, ctx) {
     var d = ctx.drill;
-    if (!d) return { err: 'answer: only available in a Basics drill', code: 1 };
+    if (!d) return { err: 'answer: only available in a Basics drill. On an incident, state the cause with diagnose.', code: 1 };
     return d.submit(argv.slice(1).join(' '));
   }, { help: 'submit an answer: answer 14' });
   sh.alias('a', 'answer');
 
   reg('solution', function (argv, io, ctx) {
     var d = ctx.drill;
-    if (!d) return { err: 'solution: only available in a Basics drill', code: 1 };
+    if (!d) return { err: 'solution: only available in a Basics drill. On an incident, hint is the only nudge.', code: 1 };
     return d.showSolution();
   }, { help: 'be shown the command for this task (costs points)' });
 
   reg('skip', function (argv, io, ctx) {
     var d = ctx.drill;
-    if (!d) return { err: 'skip: only available in a Basics drill', code: 1 };
+    if (!d) return { err: 'skip: only available in a Basics drill. An incident ends when the host is healthy, or STAND DOWN.', code: 1 };
     return d.skip();
   }, { help: 'move to the next drill task' });
 
@@ -220,12 +234,22 @@
 
   reg('finish', function (argv, io, ctx) {
     var d = ctx.drill;
-    if (!d) return { err: 'finish: only available in a Basics drill', code: 1 };
+    if (!d) return { err: 'finish: only available in a Basics drill. An incident closes itself once the fix lands.', code: 1 };
     d.finish();
     return '';
   }, { help: 'close the drill and see your command sheet' });
 
   /* ---------- incident verbs ---------- */
+
+  reg('objective', function (argv, io, ctx) {
+    // In a drill the equivalent question is "what is the current task?".
+    if (ctx.drill) return sh.cmds.task(['task'], io, ctx);
+    var g = ctx.game;
+    if (!g || !g.scenario) return '';
+    return g.objectiveText();
+  }, { help: 'what you are being asked to do, and how this incident is run',
+       detail: 'Restates the goal, the investigate -> diagnose -> fix loop and where you currently are.\nCosts nothing. After a correct diagnosis it also shows the recovery instruction.' });
+  sh.alias('goal', 'objective');
 
   reg('brief', function (argv, io, ctx) {
     var g = ctx.game;

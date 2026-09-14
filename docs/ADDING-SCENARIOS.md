@@ -267,6 +267,28 @@ been. `note` is shown in the debrief, so write it as feedback from a senior.
 Set your flags from the hooks (`onService`, `onKill`, `onTruncate`) or from a
 `curl` handler.
 
+### Engine-console and external decisions
+
+For actions that are not Linux commands, use the optional Operational decisions
+panel instead of inventing a shell utility. The FIX track shares a factory in
+`js/fix-training.js`; its case definitions live in
+`js/scenarios/fix-operations-incidents.js` and `fix-seqnum-gap.js`.
+
+- `supportActions`: an array of `{id, label, detail}` choices.
+- `supportAction(world, id)`: apply a scoped decision and return a success string
+  or an error object `{err, code: 1}`.
+- `onEvidence({cmd, out, code, world})`: observe each command's evidence, including
+  fresh reads after a finding was already discovered.
+- `walkthrough`: Linux command strings mixed with `{action: 'choice-id'}` entries.
+
+The UI requires a correct diagnosis before enabling operational decisions.
+Decision handlers must also check their prerequisites; a menu selection alone
+must not count as successful recovery. Test both the terminal workflow and the
+panel wiring, including stale evidence and unsafe alternatives. Distinguish
+documented engine methods from fictional peer responses and fixture-specific
+deployment/configuration choices. Do not claim that a simulated API executes a
+real engine.
+
 ---
 
 ## 6. Hints and debrief

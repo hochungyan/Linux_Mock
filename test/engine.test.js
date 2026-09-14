@@ -198,33 +198,23 @@ section('S4 CPU spin thread');
 }
 
 /* ---------------- scenario 5: FIX seqnum ---------------- */
-section('S5 FIX sequence gap');
+section('S5 FIX sequence mismatch');
 {
-  const sc = byId['fix-seqnum-gap'];
-  const s = makeSession(sc);
-
-  const g = s.run('grep "MsgSeqNum too low" /var/log/fixgw/fixgw-app.log | tail -2');
-  check('app log shows the reject reason', /expecting 88413 but received 1/.test(g.text), g.text);
-
-  const fixlog = s.run('tail -4 /var/log/fixgw/FIX.4.2-IBANK-GSCLIENT1.messages.log');
-  check('FIX message log has 35=5 logout', /35=5/.test(fixlog.text), fixlog.text);
-
-  const nst = s.run('netstat -anp');
-  check('client reconnect churn visible', /198\.51\.100\.44/.test(nst.text), nst.text.slice(0, 600));
-
-  check('store file has 88413', /senderseqnum=88413/.test(s.run('cat /var/lib/fixgw/sessions/FIX.4.2-IBANK-GSCLIENT1.seqnums').text));
-  check('cfg shows ResetOnLogon=N', /ResetOnLogon=N/.test(s.run('grep -B3 -A3 GSCLIENT1 /apps/fixgw/conf/sessions.cfg').text));
-  check('other sessions healthy', /GSCLIENT2/.test(s.run('curl http://localhost:9980/admin/sessions').text));
-  check('findings gathered', s.found.length >= 4, 'found: ' + s.found.join(','));
-
-  s.run('curl http://localhost:9980/admin/session/GSCLIENT1/reset');
-  check('reset fixes session', sc.fix.check(s.world) === true);
-  check('graded clean', sc.fix.grade(s.world).quality === 'clean');
-  check('store file updated', /senderseqnum=2/.test(s.run('cat /var/lib/fixgw/sessions/FIX.4.2-IBANK-GSCLIENT1.seqnums').text));
-
+  const sc = byId['fix-seqnum-gap'], s = makeSession(sc);
+  check('low-sequence reason in actual log evidence', /expecting 88413 but received 1/.test(s.run('cat /var/log/quickfixj/messages.log').text));
+  check('ordinary persistence setting visible', /ResetOnLogon=N/.test(s.run('cat /etc/quickfixj/session.cfg').text));
+  check('counter export identifies distinct incoming and outgoing values', /88413/.test(s.run('cat /var/log/quickfixj/session-state.json').text));
+  check('one-call HTTP reset no longer exists', s.run('curl http://localhost:9980/admin/session/GSCLIENT1/reset').raw.code !== 0);
+  check('diagnostics alone do not fix it', !sc.fix.check(s.world));
+  sc.walkthrough.forEach(function (step) {
+    const r = typeof step === 'string' ? s.run(step).raw : sc.supportAction(s.world, step.action);
+    check('documented recovery step: ' + (step.action || step), !r || !r.code, JSON.stringify(r));
+  });
+  check('coordinated recovery and business verification close incident', sc.fix.check(s.world));
+  check('scoped recovery graded clean', sc.fix.grade(s.world).quality === 'clean');
   const s2 = makeSession(sc);
-  s2.run('systemctl restart fixgw');
-  check('restart alone does NOT fix it', sc.fix.check(s2.world) === false);
+  s2.run('systemctl restart fix-connector');
+  check('restart alone does not resolve mismatch', !sc.fix.check(s2.world));
 }
 
 /* ---------------- scenario 6: NFS hang / EOD ---------------- */

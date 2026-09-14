@@ -137,12 +137,13 @@
     document.getElementById('list-title').textContent = 'Findings';
     document.getElementById('help-title').textContent = 'Escalation';
     document.getElementById('panel-note').innerHTML =
-      'Type <code>diagnose</code> when you know the root cause. Then fix it for real.';
+      scenario.supportActions ? 'Type <code>diagnose</code>, then use Linux commands and Operational decisions to recover and verify the flow.' : 'Type <code>diagnose</code> when you know the root cause. Then fix it for real.';
     PS.active = PS.game;
     PS.game.start(scenario);
   };
 
   PS.startDrill = function (pack) {
+    document.getElementById('support-panel').classList.add('hidden');
     selectTrack('basics');
     document.getElementById('modal').classList.add('hidden');
     PS.active = PS.drill;

@@ -15,13 +15,13 @@ Render can deploy this repository as a Docker Web Service using the root `Docker
 ## Four tracks
 
 - **Terminal drills:** inspect a simulated host and submit `answer <value>`. Use `task`, `task N`, `hint`, `solution`, `skip` and `finish`. Correct answers show a command and its interpretation. Some conceptual tasks use supplied reference notes.
-- **Incident investigations:** gather findings, use `diagnose`, then restore the machine through commands. Recovery quality affects the score.
+- **Incident investigations:** `objective` states the goal and the loop at any time; gather findings, use `diagnose`, then restore the machine through commands. Recovery quality affects the score.
 - **FIX incidents:** a dedicated tab beside Incident investigations. Investigate session gaps, bilateral sequence resets, heartbeat/TestRequest failures, drop-copy source mapping, consumer lag and Logon identity. Each new case has absolute evidence paths, a scoped approval, a runbook and separate session/business recovery checks.
 - **Interview practice:** search/filter by topic or confidence, explain your answer, reveal the guide and rate your confidence. Mock interviews select up to 20 distinct matching questions. These are self-assessments, not automatically graded exam scores. Ratings stay in this browser; scratch notes clear on changing questions.
 
 The game opens on Incident investigations. Use drills to practise commands, then investigate a desk's business failure. The [finance research notes](docs/FINANCE-RESEARCH.md) connect the new cases to public primary sources and distinguish industry behavior from fictional controls.
 
-The [FIX and platform research notes](docs/FIX-RESEARCH.md) explain the new coverage and link to FIX Trading Community, QuickFIX, CME, Kafka, AWS and Kubernetes documentation. `fixctl` is a **fictional in-memory teaching console**, not a real FIX command or venue API. Its resets cannot affect a real counterparty.
+The [FIX and platform research notes](docs/FIX-RESEARCH.md) link the workflows to FIX Trading Community, QuickFIX/J, CME and platform documentation. All seven FIX incidents combine Linux investigation with an **Operational decisions** panel for engine-console and counterparty actions. The simulator models documented QuickFIX/J configuration and JMX operations; it does not run a real FIX engine or contact a venue.
 
 ## Practical packs
 
@@ -76,11 +76,11 @@ The [coverage guide](docs/COVERAGE.md) lists all 22 interview topics, requested 
 The original FIX flapping case is now in **FIX incidents**, with its saved progress ID preserved, alongside these six new investigations:
 
 1. Inbound sequence gap — ResendRequest, application replay, administrative GapFill and buffered-message release.
-2. Coordinated sequence reset — preserve evidence, reconcile orders, confirm the bilateral agreement, disconnect, reset both counters to 1 and verify Logon.
+2. Coordinated sequence reset — preserve evidence and reconcile orders, confirm bilateral approval, stop the dedicated connector, edit `ResetOnLogon` in `/etc/quickfixj/session.cfg`, verify Logon, then restore and load the normal profile. A documented JMX alternative is also modelled.
 3. Heartbeats without a matching TestRequest response — correlate `112`, coordinate peer recovery and retain sequence history.
 4. Healthy drop copy with missing source mapping — verify entitlements, recover the missing execution copies and reconcile quantities.
-5. FIX receive checkpoint ahead of the business checkpoint — repair the consumer schema and replay its durable inbox idempotently.
-6. Rejected production Logon — correct the approved CompID/environment profile without resetting counters.
+5. FIX receive checkpoint ahead of the business checkpoint — edit the application decoder configuration, restart only its consumer, and replay its durable inbox idempotently.
+6. Rejected production Logon — edit the approved CompID/environment profile and load the correct SessionID's existing store, without resetting counters or reusing another identity's state.
 
 Scenario HTTP admin endpoints, write leases and scheduler behavior are fictional training mechanisms, not generic Linux/FIX/AutoSys APIs. MQSC, `sqlplus`, `chronyc`, `pmc` and the kdb+ processes are likewise scoped simulations driven by scenario fixtures, sufficient for the diagnostic path and not a substitute for the real products.
 
